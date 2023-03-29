@@ -9,7 +9,7 @@
       <div class="colaboradores-vazio" v-if="this.colaboradores.length <= 0">
         <h1>Ainda não possui usuários cadastrados</h1>
       </div>
-      <md-table v-else v-model="paginatedUsers">
+      <md-table v-else v-model="paginatedUsers" id="table-colaboradores">
         <md-table-toolbar>
           <h1 style="margin-inline: auto">
             Lista de colaboradores<md-icon id="icon-superior"
@@ -31,9 +31,9 @@
         </md-table-toolbar>
 
         <md-table-row slot="md-table-row" slot-scope="{ item }">
-          <md-table-cell md-label="Nome">{{ item.nome }}</md-table-cell>
-          <md-table-cell md-label="Titulação">{{ item.type }}</md-table-cell>
-          <md-table-cell md-label="Ações">
+          <md-table-cell style="width: 30%" md-label="Nome">{{ item.nome }}</md-table-cell>
+          <md-table-cell style="width: 30%" md-label="Titulação">{{ item.type }}</md-table-cell>
+          <md-table-cell style="width: 30%" md-label="Ações">
             <md-button
               class="md-just-icon md-info md-simple"
               @click.native="handleEdit(item)"
@@ -59,6 +59,10 @@
   color: #0f630a;
   margin-left: 1em;
   font-size: 1.5em !important;
+}
+
+#table-colaboradores > .md-scrollbar {
+  max-height: 100vh;
 }
 
 .md-option {
@@ -93,33 +97,6 @@ export default {
     search: null,
     isLoading: false,
     colaboradores: [],
-    users: [
-      {
-        id: 1,
-        name: "Shawna Dubbin",
-        tipo: "Gestor",
-      },
-      {
-        id: 2,
-        name: "Odette Demageard",
-        tipo: "Colaborador",
-      },
-      {
-        id: 3,
-        name: "Lonnie Izkovitz",
-        tipo: "Gestor",
-      },
-      {
-        id: 4,
-        name: "Thatcher Stave",
-        tipo: "Gestor",
-      },
-      {
-        id: 5,
-        name: "Clarinda Marieton",
-        tipo: "Colaborador",
-      },
-    ],
     paginatedUsers: [],
   }),
 
@@ -136,7 +113,7 @@ export default {
       }).then((result) => {
         if (result.value) {
           this.$router.push({
-            name: "Editar Colaborador",
+            name: "editar",
             query: { item: item.id },
           });
         }

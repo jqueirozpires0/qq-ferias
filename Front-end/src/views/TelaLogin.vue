@@ -49,7 +49,7 @@ export default {
     async submit() {
       try {
         await this.ActionLogin(this.form);
-        this.$router.push({name: 'administrador'})
+        this.$router.push({name: 'Administrador'})
       } catch (error) {
         console.log(error);
       }

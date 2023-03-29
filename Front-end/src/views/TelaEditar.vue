@@ -201,7 +201,7 @@
 
 <script>
 import Vue from "vue";
-import api from "@/modules/services/api";
+import axios from "axios";
 import moment from "moment";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
@@ -217,23 +217,12 @@ export default {
       tipoContratoCLT: false,
       tipoContratoPJ: false,
       cargoColaborador: false,
-      colaborador: {
-        nome: "",
-        email: "",
-        cnpj: "",
-        cpf: "",
-        matricula: "",
-        senha: "qq@2023",
-        tipo_contratual: "",
-        id_gestor: "",
-        cargo: "",
-        inicio_contrato: "",
-      },
+      colaborador: {},
       submitted: false,
     };
   },
   methods: {
-    cadastrar: function () {
+    update: async function () {
       try {
         let colaborador = {
           col_nome: this.colaborador.nome,
@@ -246,12 +235,12 @@ export default {
         var diff = moment().diff(moment(this.colaborador.inicio_contrato));
         var emDias = moment.duration(diff).asDays();
 
-        if(emDias >= 365){
-          colaborador.col_isFeriasLiberada = true
-          colaborador.col_dias_ferias = 30
-        }else{
-          colaborador.col_isFeriasLiberada = false
-          colaborador.col_dias_ferias = 0
+        if (emDias >= 365) {
+          colaborador.col_isFeriasLiberada = true;
+          colaborador.col_dias_ferias = 30;
+        } else {
+          colaborador.col_isFeriasLiberada = false;
+          colaborador.col_dias_ferias = 0;
         }
         if (this.colaborador.id_gestor == "") {
           colaborador.col_id_gestor = null;
@@ -279,11 +268,11 @@ export default {
           colaborador.col_isAdministrador = false;
         }
         this.isLoading = true;
-        api
-          .post("cadastro", colaborador)
+        axios
+          .put("http://localhost:3000/edit/" + colaborador.col_id, colaborador)
           .then((res) => {
             this.$router.push("/administrador");
-            Vue.toasted.success("Colaborador cadastrado!", {
+            Vue.toasted.success("Colaborador editado!", {
               className: "success",
               duration: "7000",
               position: "bottom-right",
@@ -292,7 +281,8 @@ export default {
           })
           .catch((error) => {
             this.isLoading = false;
-            Vue.toasted.error("Não foi possível cadastrar o colaborador!", {
+            console.log(this.colaborador.id_gestor);
+            Vue.toasted.error("Não foi possível editar o colaborador!", {
               className: "error",
               duration: "7000",
               position: "bottom-right",
@@ -306,8 +296,8 @@ export default {
       }
     },
     async getGestores() {
-      api
-        .get("gestores")
+      axios
+        .get("http://localhost:3000/gestores")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
             this.gestores.push({
@@ -322,6 +312,9 @@ export default {
     },
   },
   mounted() {
+    if (this.$route.query.item) {
+      this.id = this.$route.query.item;
+    }
     this.getGestores();
   },
   watch: {

@@ -1,17 +1,17 @@
 import * as types from './mutation-type'
-import axios from 'axios'
+import api from '@/modules/services/api'
 import Vue from 'vue'
 
 /* eslint-disable */
 
 export const ActionLogin = ({ dispatch }, payload) => {
-    return axios.post('http://localhost:3000/login', payload).then((res) => {
+    return api.post('login', payload).then((res) => {
         dispatch('ActionSetUser', res.data.colaborador)
         dispatch('ActionSetToken', res.data.token)
         localStorage.setItem('token', res.data.token)
-        axios.defaults.headers.common['x-acess-token'] = res.data.token
 
-        console.log(axios.defaults.headers.common['x-acess-token'])
+        dispatch('ActionLoadSession')
+
     }).catch((error) => {
         Vue.toasted.error("Email ou senha incorretos!", {
             className: "error",
@@ -44,16 +44,17 @@ export const ActionCheckToken = ({ dispatch, state }) => {
 export const ActionLoadSession = ({ dispatch }) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { data: { token, colaborador } } = await axios.get('/load-session')
+            const { token, colaborador } = await api.get('load-session')
                 .then(response => {
-                    console.log("Testando")
+                    console.log(token)
                     dispatch('ActionSetToken', token)
                     dispatch('ActionSetUser', colaborador)
 
-                    resolve()
+                    resolve(response)
+                }).catch((error) =>{
+                    console.log(error)
                 })
         } catch (error) {
-            dispatch('ActionSingOut')
             return reject(error)
         }
     })

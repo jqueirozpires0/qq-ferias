@@ -36,7 +36,7 @@
                 <i class="bx" :class="menuItem.icon || 'bx-square-rounded'" />
                 <span class="links_name">{{ menuItem.name }}</span>
                 <md-badge
-                  :md-content="totalNot.length"
+                  :md-content="totalAvisos.length + totalSolicitacoes.length"
                   v-if="menuItem.name == 'Notificações'"
                 >
                   <md-button class="md-icon-button bx-sun">
@@ -59,14 +59,15 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/modules/services/api";
 import { mapActions } from "vuex";
 export default {
   name: "Sidebar-home",
   data() {
     return {
       isOpened: false,
-      totalNot: [],
+      totalSolicitacoes: [],
+      totalAvisos: []
     };
   },
   props: {
@@ -171,17 +172,17 @@ export default {
   methods: {
     ...mapActions("auth", ["ActionLogout"]),
     async logout() {
-      this.$store.commit('ActionLogout')
-      window.localStorage.removeItem('vuex')
+      this.$store.commit("ActionLogout");
+      window.localStorage.removeItem("vuex");
       window.location.reload(true);
     },
     async getSolicitacoes() {
-      axios
-        .get("http://localhost:3000/solicitacoesTeste")
+      api
+        .get("todas-solicitacoes-analise-gestor")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
             if (res.data[i].sol_status == "analise") {
-              this.totalNot.push(res.data[i]);
+              this.totalSolicitacoes.push(res.data[i]);
             }
           }
         })
@@ -189,10 +190,26 @@ export default {
           console.log(error);
         });
     },
+    async getAvisos() {
+      this.isLoading = true;
+      api
+        .get("colaboradores-e-suas-ferias")
+        .then((res) => {
+          this.isLoading = false;
+          for (var i = 0; i < res.data.length; i++) {
+            if (res.data[i].dias == 30) this.totalAvisos.push(res.data[i]);
+          }
+        })
+        .catch((error) => {
+          this.isLoading = false;
+          console.log(error);
+        });
+    },
   },
 
   mounted() {
     this.getSolicitacoes();
+    this.getAvisos();
     this.isOpened = this.isMenuOpen;
   },
   computed: {

@@ -11,8 +11,12 @@ const porta = 3000
 const blacklist = []
 const moment = require('moment');
 
+app.listen(porta, () => {
+    console.log(`execução na porta => ${porta}...`)
+})
 app.use(express.json())
 
+//---------------------------------------------------CORS--------------------------------------------//
 app.use(cors())
 
 app.use((req, res, next) => {
@@ -31,33 +35,39 @@ app.use((req, res, next) => {
     next()
 })
 
-app.listen(porta, () => {
-    console.log(`execução na porta => ${porta}...`)
-})
-
 app.options('*', cors())
+
+//------------------------------------------------------------------------------------------------//
+
 
 //Verificação de token valido
 function verificarJWT(req, res, next) {
-    const token = req.headers['x-acess-token'];
-    const index = blacklist.findIndex(item => item === token)
-    if (index !== -1) {
-        return res.status(401).end();
+    const token = req.headers.authorization || req.body.token || req.query.token;
+    if (token) {
+        jwt.verify(token, secret, function (err, decoded) {
+            if (err) {
+                return res.json({ success: false, message: 'Failed to authenticate token.' });
+            } else {
+                req.decoded = decoded;
+                next();
+            }
+        });
+
+    } else {
+        return res.status(403).send({
+            success: false,
+            message: 'No token provided.'
+        });
+
     }
-    jwt.verify(token, secret, (err, decoded) => {
-        console.log(decoded)
-        if (err) {
-            return res.status(401).end()
-        }
-        req.id = decoded.id;
-        next();
-    })
 }
 
 //Load-Session
 app.get('/load-session', (req, res) => {
     try {
-        const token = req.headers['x-acess-token']
+        const token = req.headers
+        console.log(req.headers)
+
         jwt.verify(token, secret, (err, decoded) => {
             if (err) {
                 console.log(err)
@@ -78,8 +88,8 @@ app.get('/load-session', (req, res) => {
 //Login
 app.post('/login', async function (req, res) {
     try {
+        console.log(req)
         const { email, senha } = req.body;
-
         const colaborador = await col_colaborador.findOne({
             where: {
                 col_email: email
@@ -95,7 +105,6 @@ app.post('/login', async function (req, res) {
             return res.status(500).json({ message: 'Senha incorreta' })
         } else {
             const token = jwt.sign(colaborador.toJSON(), secret, { expiresIn: '2h' });
-
             res.json({ colaborador, token });
         }
 
@@ -107,6 +116,7 @@ app.post('/login', async function (req, res) {
 
 //---------------------------------------Buscar todos colaboradores----------------------------------------//
 app.get('/colaboradores', function (req, res) {
+    console.log(req)
     col_colaborador.findAll().then((colaboradores) => {
         res.json(colaboradores);
     })
@@ -115,6 +125,12 @@ app.get('/colaboradores', function (req, res) {
 
 //-------------------------------Buscar todos os colaboradores vinculados ao gestor---------------------------//
 app.get('/colaboradores-de-gestor', function (req, res) {
+    // fetch('/load-session')
+    //     .then((response) => response.json())
+    //     .then((data) => {
+    //         const userId = data.userId;
+    //         // Use o ID do usuário para fazer outras solicitações
+    //     });
     col_colaborador.findAll({
         where: {
             col_id_gestor: 5
@@ -161,7 +177,7 @@ app.get('/colaborador/:id', function (req, res) {
 //------------------------------------- Cadastro de um User (Colaborador)----------------------------------//
 app.post('/cadastro', async (req, res) => {
     try {
-        // Get user input
+        console.log(req.headers.authorization)
         const { col_nome, col_email, col_cpf, col_cnpj, col_contrato_tipo, col_matricula, col_senha, col_inicio_contrato, col_isFeriasLiberada, col_isGestor, col_isAdministrador, col_id_gestor, col_dias_ferias } = req.body;
 
         encryptedPassword = await bcrypt.hash(col_senha, 10);
@@ -198,7 +214,41 @@ app.post('/cadastro', async (req, res) => {
     }
 })
 //------------------------------------------------------------------------------------------------------//
+app.put('/colaboradores/:id', async (req, res) => {
+    try {
+        const { col_nome, col_email, col_cpf, col_cnpj, col_contrato_tipo, col_matricula, col_senha, col_inicio_contrato, col_isFeriasLiberada, col_isGestor, col_isAdministrador, col_id_gestor, col_dias_ferias } = req.body;
 
+        // hash a senha novamente se a senha for alterada
+        let encryptedPassword = null;
+        if (col_senha) {
+            encryptedPassword = await bcrypt.hash(col_senha, 10);
+        }
+
+        const colaborador = await col_colaborador.update({
+            col_nome,
+            col_email,
+            col_cpf,
+            col_cnpj,
+            col_contrato_tipo,
+            col_matricula,
+            col_senha: encryptedPassword,
+            col_inicio_contrato,
+            col_isFeriasLiberada,
+            col_isGestor,
+            col_isAdministrador,
+            col_id_gestor,
+            col_dias_ferias
+        }, {
+            where: {
+                col_id: req.params.id
+            }
+        });
+
+        res.status(200).json(colaborador);
+    } catch (err) {
+        console.log(err);
+    }
+});
 //-----------------------------------------Get em todos gestores----------------------------//
 app.get('/gestores', function (req, res) {
     col_colaborador.findAll({
@@ -214,16 +264,22 @@ app.get('/gestores', function (req, res) {
 //--------------------------------------Cadastro de solicitações-------------------------------------//
 app.post('/cadastroSolicitacao', async (req, res) => {
     try {
-        const solicitacao = await sol_solicitacoes.create(req.body).then(() => {
+        const { sol_dt_solicitacao , sol_inicio, sol_fim, sol_status, sol_isDecimo , sol_id_col} = req.body;
+        const solicitacao = await sol_solicitacoes.create({
+            sol_dt_solicitacao: moment(),
+            sol_fim,
+            sol_inicio,
+            sol_isDecimo,
+            sol_status: 'analise',
+            sol_id_col                  /// id do colaborador logado
+        }).then(() => {
             return res.json({
-                erro: false,
-                mensagem: console.log(req.body)
+                mensagem: "Férias cadastrada",
             });
 
         }).catch((error) => {
             console.log(error)
             return res.status(400).json({
-                erro: true,
                 mensagem: "Férias não foi cadastrada com sucesso!"
             });
         });
@@ -236,6 +292,7 @@ app.post('/cadastroSolicitacao', async (req, res) => {
 
 //------------------------------------------------------------------------------------------------------//
 
+//----------------------------------------------Solicitações--------------------------------------------//
 app.get('/solicitacoes', verificarJWT, function (req, res) {
     sol_solicitacoes.findAll({
         where: {
@@ -258,6 +315,7 @@ app.get('/solicitacoesTeste', function (req, res) {
     })
 })
 
+//-------------------------------------------------------------------------------------------------------//
 //------------------------------Todas solicitações da equipe de um gestor-----------------------------//
 app.get('/todas-solicitacoes-analise-gestor', function (req, res) {
     try {
@@ -281,6 +339,8 @@ app.get('/todas-solicitacoes-analise-gestor', function (req, res) {
 })
 
 //------------------------------------------------------------------------------------------------------//
+
+//------------------------------------------Solicitações do colaborador----------------------------------//
 app.get('/todas-solicitacoes-colaborador', function (req, res) {
     try {
         sol_solicitacoes.findAll({
@@ -301,10 +361,10 @@ app.get('/todas-solicitacoes-colaborador', function (req, res) {
         console.log("erro aqui", error)
     }
 })
+//------------------------------------------------------------------------------------------------------//
 
 //------------------------------ Pegar périodo aquisitivo ----------------------------------//
 app.get('/periodo-aquisitivo', function (req, res) {
-    console.log(req)
     col_colaborador.findAll({
         where: {
             col_id: 17
@@ -317,14 +377,15 @@ app.get('/periodo-aquisitivo', function (req, res) {
             const inicioPeriodo = moment().subtract(1, 'months').format('DD/MM')
 
             if (moment(diaAtual, 'DD/MM').isAfter(moment(inicioPeriodo, 'DD/MM')) && moment(diaAtual, 'DD/MM').isBefore(moment(contrato, 'DD/MM')) && colaboradores[i].col_dias_ferias > 0) {
-                console.log("colaboradores")
                 element = colaboradores
             }
         }
         res.send(element)
     })
 })
+//------------------------------------------------------------------------------------------------------//
 
+//--------------------------------Pegar quantidade de solicitações no mes---------------------------------//
 app.get('/todas-solicitacoes-mensal', function (req, res) {
     try {
         sol_solicitacoes.findAll({
@@ -399,7 +460,9 @@ app.get('/todas-solicitacoes-mensal', function (req, res) {
         console.log("erro aqui", error)
     }
 })
+//------------------------------------------------------------------------------------------------------//
 
+//--------------------------------------Pegar colaboradores de férias-------------------------------------//
 app.get('/todos-colaboradores-de-ferias-gestor', function (req, res) {
     try {
         sol_solicitacoes.findAll({
@@ -427,31 +490,98 @@ app.get('/todos-colaboradores-de-ferias-gestor', function (req, res) {
         console.log("erro aqui", error)
     }
 })
+//------------------------------------------------------------------------------------------------------//
 
-// app.get('/teste', function (req, res) {
-//     try {
-//         col_colaborador.findAll({
-//             include: [
-//                 {
-//                     model: sol_solicitacoes,
-//                     require: false
-//                 }
-//             ]
-//             ,
-//             where: { '$col_collaborator.col_id_gestor$': '5' }
-//         }).then((solicitacoes) => {
-//             res.send(solicitacoes)
-//             var colaborador = '$col_collaborator'
-//             var requests = '$req_requests'
-//             if (colaborador.requests != [] && colaborador.requests.sol_fim)
-//                 for (var index = 0; index < requests.length; index++) {
-//                     res.send(solicitacoes)
-//                 }
+//--------------------------------------Férias do colaborador---------------------------------------------//
+app.get('/colaboradores-e-suas-ferias', function (req, res) {
+    try {
+        col_colaborador.findAll({
+            include: [
+                {
+                    model: sol_solicitacoes,
+                    require: false
+                }
+            ]
+            ,
+            where: { '$col_collaborator.col_id_gestor$': '5' }
+        }).then((solicitacoes) => {
+            function compare(a, b) {
+                return b.data - a.data;
+            }
+            let element = [];
+            for (var index = 0; index < solicitacoes.length; index++) {
+                for (var i = 0; i < solicitacoes[index].req_requests.length; i++) {
+                    const diaAtual = moment();
+                    const inicioPeriodo = moment(solicitacoes[index].req_requests[i].sol_fim).add(2, 'years');
+                    if (solicitacoes[index].req_requests[i].sol_status == 'aprovado' && inicioPeriodo.diff(diaAtual, 'days') < 60) {
+                        element.push({ nome: solicitacoes[index].col_nome, data: moment(solicitacoes[index].req_requests[i].sol_fim), dias: solicitacoes[index].col_dias_ferias })
+                    }
+                }
+            }
+            element = element.sort(compare);
+            const objetosUnicos = Object.values(element.reduce((acc, objeto) => {
+                if (!acc[objeto.nome]) {
+                    acc[objeto.nome] = objeto;
+                }
+                return acc;
+            }, {}));
+            res.send(objetosUnicos)
 
-//         }).catch((error) => {
-//             console.log("erro aqui", error)
-//         })
-//     } catch (error) {
-//         console.log("erro aqui", error)
-//     }
-// })
+        }).catch((error) => {
+            console.log("erro aqui", error)
+        })
+    } catch (error) {
+        console.log("erro aqui", error)
+    }
+})
+//------------------------------------------------------------------------------------------------------//
+
+//---------------------------------------Aprovar férias--------------------------------------------------//
+app.put('/aprovar-ferias/:id', async function (req, res) {
+    try {
+        const id = req.params.id;
+        const solicitacao = await sol_solicitacoes.findOne({
+            where: {
+                sol_id: 35
+            }
+        });
+
+        if (solicitacao && solicitacao.sol_status === 'analise') {
+            solicitacao.sol_status = 'aprovado';
+            await solicitacao.save();
+            res.status(200).send("Solicitação aprovada");
+        } else {
+            res.status(404).send("Solicitação não encontrada ou já aprovada");
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Erro interno do servidor");
+    }
+})
+//------------------------------------------------------------------------------------------------------//
+
+//----------------------------------------Reprovar férias--------------------------------------------------//
+app.put('/reprovar-ferias/:id', async function (req, res) {
+    try {
+        const id = req.params.id;
+        const solicitacao = await sol_solicitacoes.findOne({
+            where: {
+                sol_id: 53
+            }
+        });
+
+        if (solicitacao && solicitacao.sol_status === 'analise') {
+            solicitacao.sol_status = 'reprovado';
+            await solicitacao.save();
+            res.status(200).send("Solicitação reprovada");
+        } else {
+            res.status(404).send("Solicitação não encontrada ou já reprovada");
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Erro interno do servidor");
+    }
+})
+//------------------------------------------------------------------------------------------------------//

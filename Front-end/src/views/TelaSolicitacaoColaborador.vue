@@ -52,12 +52,12 @@
           </h1>
         </md-table-toolbar>
         <md-table-row slot="md-table-row" slot-scope="{ item }">
-          <md-table-cell md-label="Nome">{{ item.nome }}</md-table-cell>
-          <md-table-cell style="color: #2c8e2a" md-label="Solicitações">{{
+          <md-table-cell style="width: 30%" md-label="Nome">{{ item.nome }}</md-table-cell>
+          <md-table-cell style="color: #2c8e2a; width: 30%" md-label="Solicitações">{{
             item.solicitacao
           }}</md-table-cell>
           <md-table-cell md-label="Status">
-            <md-icon style="color: #f4f75f">psychology_alt</md-icon>
+            <md-icon style="color: #f4f75f; width: 30%">psychology_alt</md-icon>
             <md-tooltip md-direction="bottom">Em análise</md-tooltip>
           </md-table-cell>
         </md-table-row>
@@ -84,33 +84,6 @@ export default {
   data: () => ({
     isLoading: false,
     solicitacoesEquipe: [],
-    users: [
-      {
-        id: 1,
-        name: "Shawna Dubbin",
-        solicitacao: "Início: 14/11/2023 <-> Término: 24/11/2023",
-      },
-      {
-        id: 2,
-        name: "Odette Demageard",
-        solicitacao: "Início: 14/11/2023 <-> Término: 24/11/2023",
-      },
-      {
-        id: 3,
-        name: "Lonnie Izkovitz",
-        solicitacao: "Início: 14/11/2023 <-> Término: 24/11/2023",
-      },
-      {
-        id: 4,
-        name: "Thatcher Stave",
-        solicitacao: "Início: 14/11/2023 <-> Término: 24/11/2023",
-      },
-      {
-        id: 5,
-        name: "Clarinda Marieton",
-        solicitacao: "Início: 14/11/2023 <-> Término: 24/11/2023",
-      },
-    ],
     paginatedUsers: [],
     solicitacoes: {
       inicio: "",
@@ -143,14 +116,10 @@ export default {
         });
     },
     solicitar: function () {
-      // Se colaborador tiver disponível para férias
       try {
         let solicitacao = {
-          sol_dt_solicitacao: Date.now(),
           sol_inicio: this.solicitacoes.inicio,
           sol_fim: this.solicitacoes.fim,
-          sol_status: "analise",
-          col_id_gestor: 1,
           col_id: 5,
         };
 

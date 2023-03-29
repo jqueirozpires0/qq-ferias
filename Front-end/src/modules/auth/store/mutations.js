@@ -1,4 +1,3 @@
-import axios from 'axios'
 import * as types from './mutation-type.js'
 
 
@@ -10,7 +9,6 @@ export default{
 
     [types.SET_TOKEN](state, payload){
         state.token = payload
-        axios.defaults.headers.common['x-acess-token'] = payload
         localStorage.setItem('token', payload.token)
     },
     [types.CLEAR_USER](state){

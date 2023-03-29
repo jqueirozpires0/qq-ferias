@@ -14,11 +14,11 @@
         <h2>Dias disponíveis para férias</h2>
         <h3>{{ diasDisponiveis }} Dias</h3>
       </md-content>
-      <md-table v-model="solicitacoes">
+      <md-table v-model="solicitacoes" id="table-historico">
         <md-table-toolbar>
-          <h2 style="margin-inline: auto; padding-top: 50px">
+          <h1 style="margin-inline: auto; padding-top: 50px">
             Histórico solicitações
-          </h2>
+          </h1>
         </md-table-toolbar>
         <md-table-row slot="md-table-row" slot-scope="{ item }">
           <md-table-cell style="width: 30%" md-label="Data da solicitação">{{
@@ -47,7 +47,7 @@
               >Em análise</md-tooltip
             ></md-table-cell
           >
-          <md-table-cell v-else md-label="Staus">
+          <md-table-cell style="width: 30%" v-else md-label="Staus">
             <md-icon style="color: #df5951">close</md-icon>
             <md-tooltip md-direction="bottom"
               >Reprovada</md-tooltip
@@ -59,7 +59,7 @@
         v-model="periodoAquisitivo"
       >
         <md-table-toolbar>
-          <h2 style="margin-inline: auto; padding-top: 50px">Avisos</h2>
+          <h1 style="margin-inline: auto; padding-top: 50px">Avisos</h1>
         </md-table-toolbar>
         <md-table-row slot="md-table-row" slot-scope="{ item }">
           <md-table-cell style="width: 50%" md-label="Informação">{{
@@ -84,6 +84,10 @@
   background-color: rgb(247, 247, 247) !important;
   margin-inline: auto;
   padding-top: 5px;
+}
+
+#table-historico > .md-scrollbar {
+  max-height: 400px;
 }
 
 .solicitacoes-vazia {

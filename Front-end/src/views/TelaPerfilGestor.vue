@@ -75,18 +75,18 @@
       <column-chart
         :colors="['#0F630A']"
         :data="[
-          ['Janeiro', this.solicitacoes[0].value],
-          ['Fevereiro', this.solicitacoes[1].value],
-          ['Março', this.solicitacoes[2].value],
-          ['Abril', this.solicitacoes[3].value],
-          ['Maio', this.solicitacoes[4].value],
-          ['Junho', this.solicitacoes[5].value],
-          ['Julho', this.solicitacoes[6].value],
-          ['Agosto', this.solicitacoes[7].value],
-          ['Setembro', this.solicitacoes[8].value],
-          ['Outubro', this.solicitacoes[9].value],
-          ['Novembro', this.solicitacoes[10].value],
-          ['Dezembro', this.solicitacoes[11].value],
+          ['Janeiro', this.solicitacoes[0].quantidade],
+          ['Fevereiro', this.solicitacoes[1].quantidade],
+          ['Março', this.solicitacoes[2].quantidade],
+          ['Abril', this.solicitacoes[3].quantidade],
+          ['Maio', this.solicitacoes[4].quantidade],
+          ['Junho', this.solicitacoes[5].quantidade],
+          ['Julho', this.solicitacoes[6].quantidade],
+          ['Agosto', this.solicitacoes[7].quantidade],
+          ['Setembro', this.solicitacoes[8].quantidade],
+          ['Outubro', this.solicitacoes[9].quantidade],
+          ['Novembro', this.solicitacoes[10].quantidade],
+          ['Dezembro', this.solicitacoes[11].quantidade],
         ]"
       ></column-chart>
     </div>
@@ -236,7 +236,6 @@ export default {
               nome: res.data[index].col_nome,
             });
           }
-          console.log(nomes);
           for (var i = 0; i < res.data.length; i++) {
             if (!nomes.includes(res.data[i].col_nome)) {
               this.paginatedUsers.push({
@@ -259,7 +258,7 @@ export default {
           for (var i = 0; i < res.data.length; i++) {
             var mes = res.data[i];
             this.solicitacoes.push({
-              value: mes,
+              quantidade: mes,
             });
           }
           this.isLoading = false;

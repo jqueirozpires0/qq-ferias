@@ -5,6 +5,7 @@ import beforeEach from './beforeEach'
 import TelaLogin from '../views/TelaLogin.vue'
 //Administrador
 import Cadastro from '../views/TelaCadastro.vue'
+import Edit from '../views/TelaEditar.vue'
 import TelaPerfilAdministrador from '../views/TelaPerfilAdministrador.vue'
 //Colaborador
 import TelaPerfilColaborador from '../views/TelaPerfilColaborador.vue'
@@ -18,37 +19,42 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/login',
-    name: 'login',
+    name: 'Login',
     component: TelaLogin
   },
   {
     path: '/cadastro',
-    name: 'cadastro',
+    name: 'Cadastro',
     component: Cadastro
   },
   {
+    path: '/edit',
+    name: 'Editar',
+    component: Edit
+  },
+  {
     path: '/solicitacao',
-    name: 'solicitacao',
+    name: 'Solicitaçao',
     component: TelaSolicitacaoColaborador
   },
   {
     path: '/notificacoes',
-    name: 'notificacoes',
+    name: 'Notificações',
     component: TelaNotificacoes
   },
    {
      path: '/administrador',
-     name: 'administrador',
+     name: 'Perfil Administrador',
      component: TelaPerfilAdministrador
    },
    {
     path: '/colaborador',
-    name: 'telaperfilcolaborador',
+    name: 'Perfil Colaborador',
     component: TelaPerfilColaborador
   },
   {
     path: '/gestor',
-    name: 'telaperfilgestor',
+    name: 'Perfil Gestor',
     component: TelaPerfilGestor
   }
 ]

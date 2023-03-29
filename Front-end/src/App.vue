@@ -22,7 +22,7 @@ export default {
   computed: {
     showSideBar() {
       this.menuLoginBody
-      return this.$route.name !== "login";
+      return this.$route.name !== "Login";
     },
   },
 };
