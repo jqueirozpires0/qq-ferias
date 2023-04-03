@@ -75,18 +75,18 @@
       <column-chart
         :colors="['#0F630A']"
         :data="[
-          ['Janeiro', this.solicitacoes[0].quantidade],
-          ['Fevereiro', this.solicitacoes[1].quantidade],
-          ['Março', this.solicitacoes[2].quantidade],
-          ['Abril', this.solicitacoes[3].quantidade],
-          ['Maio', this.solicitacoes[4].quantidade],
-          ['Junho', this.solicitacoes[5].quantidade],
-          ['Julho', this.solicitacoes[6].quantidade],
-          ['Agosto', this.solicitacoes[7].quantidade],
-          ['Setembro', this.solicitacoes[8].quantidade],
-          ['Outubro', this.solicitacoes[9].quantidade],
-          ['Novembro', this.solicitacoes[10].quantidade],
-          ['Dezembro', this.solicitacoes[11].quantidade],
+          ['Janeiro', this.solicitacoes[0].mes],
+          ['Fevereiro', this.solicitacoes[1].mes],
+          ['Março', this.solicitacoes[2].mes],
+          ['Abril', this.solicitacoes[3].mes],
+          ['Maio', this.solicitacoes[4].mes],
+          ['Junho', this.solicitacoes[5].mes],
+          ['Julho', this.solicitacoes[6].mes],
+          ['Agosto', this.solicitacoes[7].mes],
+          ['Setembro', this.solicitacoes[8].mes],
+          ['Outubro', this.solicitacoes[9].mes],
+          ['Novembro', this.solicitacoes[10].mes],
+          ['Dezembro', this.solicitacoes[11].mes],
         ]"
       ></column-chart>
     </div>
@@ -182,7 +182,7 @@ import Vue from "vue";
 import StatsCard from "@/components/StatsCard.vue";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
-import axios from "axios";
+import api from "@/modules/services/api";
 
 export default {
   components: {
@@ -201,14 +201,11 @@ export default {
     paginatedUsers: [],
   }),
   methods: {
-    async getColaboradoresFerias() {
-      this.isLoading = true;
-    },
     async getColaboradores() {
       this.isLoading = true;
       var nomes = [];
-      axios
-        .get("http://localhost:3000/todos-colaboradores-de-ferias-gestor")
+      api
+        .get("todos-colaboradores-de-ferias-gestor")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
             {
@@ -228,8 +225,8 @@ export default {
         .catch((error) => {
           console.log(error);
         });
-      axios
-        .get("http://localhost:3000/colaboradores-de-gestor")
+      api
+        .get("colaboradores-de-gestor")
         .then((res) => {
           for (var index = 0; index < res.data.length; index++) {
             this.colaboradores.push({
@@ -252,15 +249,14 @@ export default {
     },
     async getSolicitacoesMensal() {
       this.isLoading = true;
-      axios
-        .get("http://localhost:3000/todas-solicitacoes-mensal")
+      api
+        .get("todas-solicitacoes-mensal")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
             var mes = res.data[i];
-            this.solicitacoes.push({
-              quantidade: mes,
-            });
+            this.solicitacoes.push({ mes });
           }
+          console.log(this.solicitacoes)
           this.isLoading = false;
         })
         .catch((error) => {

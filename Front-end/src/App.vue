@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <SidebarHome v-if="showSideBar"/>
+    <SidebarHome v-if="showSideBar" />
     <router-view />
   </div>
 </template>
@@ -10,6 +10,7 @@ import SidebarHome from "@/components/SidebarHome.vue";
 
 export default {
   name: "HomeView",
+  styleLogin: true,
   components: {
     SidebarHome,
   },
@@ -21,7 +22,6 @@ export default {
   },
   computed: {
     showSideBar() {
-      this.menuLoginBody
       return this.$route.name !== "Login";
     },
   },

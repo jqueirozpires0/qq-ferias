@@ -1,4 +1,4 @@
 export default {
-    colaborador: {},
+    colaborador: [],
     token: ''
 }

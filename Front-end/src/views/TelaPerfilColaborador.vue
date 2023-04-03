@@ -8,11 +8,11 @@
       </h1>
       <md-content class="info-perfil">
         <h2>Nome</h2>
-        <h3>Marcelo Calado</h3>
+        <h3>{{this.nomeColaborador}}</h3>
         <h2>Gestor responsável</h2>
-        <h3>Allan Tubarão</h3>
+        <h3>{{this.nomeGestor}}</h3>
         <h2>Dias disponíveis para férias</h2>
-        <h3>{{ diasDisponiveis }} Dias</h3>
+        <h3>{{ this.diasFeriasColaborador }} Dias</h3>
       </md-content>
       <md-table v-model="solicitacoes" id="table-historico">
         <md-table-toolbar>
@@ -29,7 +29,7 @@
           }}</md-table-cell>
           <md-table-cell
             style="width: 30%"
-            v-if="item.status == 'aprovada'"
+            v-if="item.status == 'aprovado'"
             md-label="Staus"
           >
             <md-icon style="color: #2c8e2a">done</md-icon>
@@ -39,7 +39,7 @@
           >
           <md-table-cell
             style="width: 30%"
-            v-if="item.status == 'analise'"
+            v-else-if="item.status == 'analise'"
             md-label="Staus"
           >
             <md-icon style="color: #f4f75f">psychology_alt</md-icon>
@@ -55,9 +55,7 @@
           >
         </md-table-row>
       </md-table>
-      <md-table
-        v-model="periodoAquisitivo"
-      >
+      <md-table v-model="periodoAquisitivo">
         <md-table-toolbar>
           <h1 style="margin-inline: auto; padding-top: 50px">Avisos</h1>
         </md-table-toolbar>
@@ -99,25 +97,29 @@
 </style>
 <script>
 import Vue from "vue";
-import axios from "axios";
+import api from "@/modules/services/api";
 import moment from "moment";
 export default {
   created() {
     this.getSolicitacoes();
     this.getPeriodoAquisitivo();
+    this.getInfoColaborador();
+    this.getInfoGestor();
+    console.log(this.solicitacoes)
   },
   data: () => ({
-    diasDisponiveis: 30,
     solicitacoes: [],
     periodoAquisitivo: [],
+    nomeColaborador: "",
+    nomeGestor: "",
+    diasFeriasColaborador: ""
   }),
   methods: {
     async getPeriodoAquisitivo() {
-      axios
-        .get("http://localhost:3000/periodo-aquisitivo")
+      api
+        .get("periodo-aquisitivo")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
-            console.log(res)
             this.periodoAquisitivo.push({
               mensagem: "Você está prestes a renovar seu período aquisitivo ",
               data: moment(res.data[i].col_inicio_contrato).format("DD/MM"),
@@ -128,9 +130,30 @@ export default {
           console.log(error);
         });
     },
+    async getInfoColaborador() {
+      api
+        .get("info-colaborador")
+        .then((res) => {
+          this.nomeColaborador = res.data.col_nome
+          this.diasFeriasColaborador = res.data.col_dias_ferias
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+    async getInfoGestor() {
+      api
+        .get("info-gestor")
+        .then((res) => {
+          this.nomeGestor = res.data.col_nome
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     async getSolicitacoes() {
-      axios
-        .get("http://localhost:3000/todas-solicitacoes-colaborador")
+      api
+        .get("todas-solicitacoes-colaborador")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
             this.solicitacoes.push({

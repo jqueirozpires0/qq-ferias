@@ -55,7 +55,7 @@
 </style>
 <script>
 import Vue from "vue";
-import axios from "axios";
+import api from "@/modules/services/api";
 import moment from "moment";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
@@ -78,12 +78,13 @@ export default {
     async getSolicitacaoGestor() {
       this.isLoading = true;
       this.solicitacoesEquipe = [];
-      axios
-        .get("http://localhost:3000/todas-solicitacoes-analise-gestor")
+      api
+        .get("todas-solicitacoes-analise-gestor")
         .then((res) => {
           this.isLoading = false;
           for (var i = 0; i < res.data.length; i++) {
             this.solicitacoesEquipe.push({
+              id: res.data[i].sol_id,
               nome: res.data[i].col_collaborator.col_nome,
               solicitacao:
                 "Início: " +
@@ -100,8 +101,8 @@ export default {
     },
     async getColaboradoresSemFerias() {
       this.isLoading = true;
-      axios
-        .get("http://localhost:3000/colaboradores-e-suas-ferias")
+      api
+        .get("colaboradores-e-suas-ferias")
         .then((res) => {
           this.isLoading = false;
           for (var i = 0; i < res.data.length; i++) {
@@ -119,8 +120,8 @@ export default {
     },
     async aprovar(item) {
       this.isLoading = true;
-      axios
-        .put("http://localhost:3000/aprovar-ferias/" + item.id)
+      api
+        .put("aprovar-ferias/" + item.id)
         .then((res) => {
           this.isLoading = false;
           Vue.toasted.success(
@@ -141,9 +142,10 @@ export default {
     },
     async recusar(item) {
       this.isLoading = true;
-      axios
-        .put("http://localhost:3000/reprovar-ferias/" + item.id)
+      api
+        .put("reprovar-ferias/" + item.id)
         .then((res) => {
+          console.log(item)
           this.isLoading = false;
           Vue.toasted.error(
             "Férias Recusadas! Uma notificação será enviada para o colaborador",

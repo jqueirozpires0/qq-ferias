@@ -31,8 +31,12 @@
         </md-table-toolbar>
 
         <md-table-row slot="md-table-row" slot-scope="{ item }">
-          <md-table-cell style="width: 30%" md-label="Nome">{{ item.nome }}</md-table-cell>
-          <md-table-cell style="width: 30%" md-label="Titulação">{{ item.type }}</md-table-cell>
+          <md-table-cell style="width: 30%" md-label="Nome">{{
+            item.nome
+          }}</md-table-cell>
+          <md-table-cell style="width: 30%" md-label="Titulação">{{
+            item.type
+          }}</md-table-cell>
           <md-table-cell style="width: 30%" md-label="Ações">
             <md-button
               class="md-just-icon md-info md-simple"
@@ -85,10 +89,10 @@
 import Swal from "sweetalert2";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
-import axios from "axios";
+import api from "@/modules/services/api";
 export default {
-  components:{
-    Loading
+  components: {
+    Loading,
   },
   created() {
     this.getColaboradores();
@@ -103,7 +107,7 @@ export default {
   methods: {
     handleEdit(item) {
       Swal.fire({
-        title: `Você quer editar` + `<br><br>` + `${item.name}?`,
+        title: `Você quer editar` + `<br><br>` + `${item.nome}?`,
         buttonsStyling: false,
         showCancelButton: true,
         cancelButtonText: "Não",
@@ -113,7 +117,7 @@ export default {
       }).then((result) => {
         if (result.value) {
           this.$router.push({
-            name: "editar",
+            name: "Editar",
             query: { item: item.id },
           });
         }
@@ -138,8 +142,8 @@ export default {
       });
     },
     async deleteRow(item) {
-      axios
-        .delete("http://localhost:3000/colaborador/" + item.id)
+      api
+        .delete("colaborador/" + item.id)
         .then((res) => {
           Swal.fire({
             title: "Deletado!",
@@ -159,8 +163,8 @@ export default {
     },
     async getColaboradores() {
       this.isLoading = true;
-      axios
-        .get("http://localhost:3000/colaboradores")
+      api
+        .get("colaboradores")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
             var tipo = "";

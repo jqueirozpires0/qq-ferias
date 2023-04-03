@@ -28,9 +28,13 @@
         max-height: calc(100% - 60px);
       "
     >
-      <div id="my-scroll" style="margin: 6px 14px 0 14px">
+      <div
+        v-if="this.tipoColaborador === 'Gestor'"
+        id="my-scroll"
+        style="margin: 6px 14px 0 14px"
+      >
         <ul class="nav-list" style="overflow: visible">
-          <span v-for="(menuItem, index) in menuItems" :key="index">
+          <span v-for="(menuItem, index) in menuItemsGestor" :key="index">
             <li>
               <a :href="menuItem.link">
                 <i class="bx" :class="menuItem.icon || 'bx-square-rounded'" />
@@ -44,9 +48,41 @@
                   </md-button>
                 </md-badge>
               </a>
-              <span class="tooltip">{{
-                menuItem.tooltip || menuItem.name
-              }}</span>
+            </li>
+          </span>
+        </ul>
+      </div>
+      <div
+        v-if="this.tipoColaborador === 'Administrador'"
+        id="my-scroll"
+        style="margin: 6px 14px 0 14px"
+      >
+        <ul class="nav-list" style="overflow: visible">
+          <span
+            v-for="(menuItem, index) in menuItemsAdministrador"
+            :key="index"
+          >
+            <li>
+              <a :href="menuItem.link">
+                <i class="bx" :class="menuItem.icon || 'bx-square-rounded'" />
+                <span class="links_name">{{ menuItem.name }}</span>
+              </a>
+            </li>
+          </span>
+        </ul>
+      </div>
+      <div
+        v-if="this.tipoColaborador === 'Colaborador'"
+        id="my-scroll"
+        style="margin: 6px 14px 0 14px"
+      >
+        <ul class="nav-list" style="overflow: visible">
+          <span v-for="(menuItem, index) in menuItemsColaborador" :key="index">
+            <li>
+              <a :href="menuItem.link">
+                <i class="bx" :class="menuItem.icon || 'bx-square-rounded'" />
+                <span class="links_name">{{ menuItem.name }}</span>
+              </a>
             </li>
           </span>
         </ul>
@@ -67,10 +103,15 @@ export default {
     return {
       isOpened: false,
       totalSolicitacoes: [],
-      totalAvisos: []
+      totalAvisos: [],
+      tipoColaborador: "",
     };
   },
   props: {
+    menuLoginBody: {
+      type: String,
+      default: "0px",
+    },
     //! Menu settings
     isMenuOpen: {
       type: Boolean,
@@ -101,7 +142,7 @@ export default {
       default: "78px",
     },
     //! Menu items
-    menuItems: {
+    menuItemsGestor: {
       type: Array,
       default: () => [
         {
@@ -111,14 +152,38 @@ export default {
           icon: "bx-user",
         },
         {
-          link: "/colaborador",
-          name: "Perfil Colaborador",
+          link: "/notificacoes",
+          name: "Notificações",
+          tooltip: "Messages",
+          icon: "bx-chat",
+        },
+      ],
+    },
+
+    menuItemsAdministrador: {
+      type: Array,
+      default: () => [
+        {
+          link: "/administrador",
+          name: "Perfil Administrador",
           tooltip: "Perfil",
           icon: "bx-user",
         },
         {
-          link: "/administrador",
-          name: "Perfil Administrador",
+          link: "/cadastro",
+          name: "Cadastro",
+          tooltip: "Messages",
+          icon: "bx-code-block",
+        },
+      ],
+    },
+
+    menuItemsColaborador: {
+      type: Array,
+      default: () => [
+        {
+          link: "/colaborador",
+          name: "Perfil Colaborador",
           tooltip: "Perfil",
           icon: "bx-user",
         },
@@ -127,18 +192,6 @@ export default {
           name: "Solicitar Férias",
           tooltip: "Solicitação",
           icon: "bx-chat",
-        },
-        {
-          link: "/notificacoes",
-          name: "Notificações",
-          tooltip: "Messages",
-          icon: "bx-chat",
-        },
-        {
-          link: "/cadastro",
-          name: "Cadastro",
-          tooltip: "Messages",
-          icon: "bx-code-block",
         },
       ],
     },
@@ -174,6 +227,7 @@ export default {
     async logout() {
       this.$store.commit("ActionLogout");
       window.localStorage.removeItem("vuex");
+      window.localStorage.removeItem("token");
       window.location.reload(true);
     },
     async getSolicitacoes() {
@@ -205,9 +259,26 @@ export default {
           console.log(error);
         });
     },
+    async getInfoColaborador() {
+      api
+        .get("info-colaborador")
+        .then((res) => {
+          if (res.data.col_isGestor == true) {
+            this.tipoColaborador = "Gestor";
+          } else if (res.data.col_isAdministrador == true) {
+            this.tipoColaborador = "Administrador";
+          } else {
+            this.tipoColaborador = "Colaborador";
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
   },
 
   mounted() {
+    this.getInfoColaborador();
     this.getSolicitacoes();
     this.getAvisos();
     this.isOpened = this.isMenuOpen;
@@ -228,6 +299,11 @@ export default {
   },
   watch: {
     isOpened() {
+      if (this.$router.name === "Login") {
+        this.menuLoginBody
+        console.log("dentro")
+      }
+      console.log(window.location.href)
       window.document.body.style.paddingLeft =
         this.isOpened && this.isPaddingLeft
           ? this.menuOpenedPaddingLeftBody

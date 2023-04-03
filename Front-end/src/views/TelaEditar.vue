@@ -201,7 +201,7 @@
 
 <script>
 import Vue from "vue";
-import axios from "axios";
+import api from "@/modules/services/api";
 import moment from "moment";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
@@ -268,8 +268,8 @@ export default {
           colaborador.col_isAdministrador = false;
         }
         this.isLoading = true;
-        axios
-          .put("http://localhost:3000/edit/" + colaborador.col_id, colaborador)
+        api
+          .put("edit/" + colaborador.col_id, colaborador)
           .then((res) => {
             this.$router.push("/administrador");
             Vue.toasted.success("Colaborador editado!", {
@@ -296,8 +296,8 @@ export default {
       }
     },
     async getGestores() {
-      axios
-        .get("http://localhost:3000/gestores")
+      api
+        .get("gestores")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
             this.gestores.push({

@@ -46,7 +46,7 @@ col_colaborador.hasMany(sol_solicitacoes, {
 //     foreignKey: 'sol_id_gestor' 
 // })
 
-//sol_solicitacoes.sync()
+//sol_solicitacoes.sync({force: true})
 
 
 module.exports = sol_solicitacoes;

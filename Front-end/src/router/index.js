@@ -42,12 +42,12 @@ const routes = [
     name: 'Notificações',
     component: TelaNotificacoes
   },
-   {
-     path: '/administrador',
-     name: 'Perfil Administrador',
-     component: TelaPerfilAdministrador
-   },
-   {
+  {
+    path: '/administrador',
+    name: 'Perfil Administrador',
+    component: TelaPerfilAdministrador
+  },
+  {
     path: '/colaborador',
     name: 'Perfil Colaborador',
     component: TelaPerfilColaborador

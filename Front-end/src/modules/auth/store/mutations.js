@@ -9,7 +9,7 @@ export default{
 
     [types.SET_TOKEN](state, payload){
         state.token = payload
-        localStorage.setItem('token', payload.token)
+        localStorage.setItem('token', payload)
     },
     [types.CLEAR_USER](state){
         state.colaborador = null

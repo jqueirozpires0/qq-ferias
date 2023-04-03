@@ -49,7 +49,14 @@ export default {
     async submit() {
       try {
         await this.ActionLogin(this.form);
-        this.$router.push({name: 'Administrador'})
+        var colaborador = JSON.parse(localStorage.getItem("colaborador"))
+        if (colaborador.col_isGestor == true) {
+          this.$router.push({ name: "Perfil Gestor" });
+        } else if (colaborador.col_isAdministrador == true) {
+          this.$router.push({ name: "Perfil Administrador" });
+        } else {
+          this.$router.push({ name: "Perfil Colaborador" });
+        }
       } catch (error) {
         console.log(error);
       }

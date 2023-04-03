@@ -31,7 +31,7 @@ export const ActionCheckToken = ({ dispatch, state }) => {
         return Promise.resolve(token)
     }
 
-    const token = localStorage.getItem(token)
+    const token = localStorage.getItem('token')
 
     if (!token) {
         return Promise.reject(new Error('Token invalido'))
@@ -44,16 +44,14 @@ export const ActionCheckToken = ({ dispatch, state }) => {
 export const ActionLoadSession = ({ dispatch }) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { token, colaborador } = await api.get('load-session')
-                .then(response => {
-                    console.log(token)
-                    dispatch('ActionSetToken', token)
-                    dispatch('ActionSetUser', colaborador)
+            const {
+                data: { token,colaborador },
+              } =  await api.get('load-session')
+              dispatch('ActionSetToken', token)
+              dispatch('ActionSetUser', colaborador)
+              console.log(data)
 
-                    resolve(response)
-                }).catch((error) =>{
-                    console.log(error)
-                })
+              resolve()
         } catch (error) {
             return reject(error)
         }

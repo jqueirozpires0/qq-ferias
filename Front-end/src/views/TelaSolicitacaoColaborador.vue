@@ -52,10 +52,14 @@
           </h1>
         </md-table-toolbar>
         <md-table-row slot="md-table-row" slot-scope="{ item }">
-          <md-table-cell style="width: 30%" md-label="Nome">{{ item.nome }}</md-table-cell>
-          <md-table-cell style="color: #2c8e2a; width: 30%" md-label="Solicitações">{{
-            item.solicitacao
+          <md-table-cell style="width: 30%" md-label="Nome">{{
+            item.nome
           }}</md-table-cell>
+          <md-table-cell
+            style="color: #2c8e2a; width: 30%"
+            md-label="Solicitações"
+            >{{ item.solicitacao }}</md-table-cell
+          >
           <md-table-cell md-label="Status">
             <md-icon style="color: #f4f75f; width: 30%">psychology_alt</md-icon>
             <md-tooltip md-direction="bottom">Em análise</md-tooltip>
@@ -68,7 +72,7 @@
 
 <script>
 import Vue from "vue";
-import axios from "axios";
+import api from "@/modules/services/api";
 import Swal from "sweetalert2";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
@@ -76,6 +80,7 @@ import moment from "moment";
 export default {
   created() {
     this.getSolicitacaoGestor();
+    this.getInfoColaborador();
     this.paginatedUsers = this.solicitacoesEquipe;
   },
   components: {
@@ -85,6 +90,7 @@ export default {
     isLoading: false,
     solicitacoesEquipe: [],
     paginatedUsers: [],
+    tipoContrato: "",
     solicitacoes: {
       inicio: "",
       dias: "",
@@ -93,9 +99,20 @@ export default {
     },
   }),
   methods: {
+    async getInfoColaborador() {
+      api
+        .get("info-colaborador")
+        .then((res) => {
+          this.tipoContrato = res.data.col_contrato_tipo;
+          console.log(this.tipoContrato);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     async getSolicitacaoGestor() {
-      axios
-        .get("http://localhost:3000/todas-solicitacoes-analise-gestor")
+      api
+        .get("todas-solicitacoes-analise-equipe")
         .then((res) => {
           for (var i = 0; i < res.data.length; i++) {
             if (res.data[i].sol_status == "analise") {
@@ -120,21 +137,14 @@ export default {
         let solicitacao = {
           sol_inicio: this.solicitacoes.inicio,
           sol_fim: this.solicitacoes.fim,
-          col_id: 5,
         };
 
         var diff = moment(this.solicitacoes.fim).diff(
           moment(this.solicitacoes.inicio)
         );
         var emDias = moment.duration(diff).asDays();
-        // if(emDias > 30){
-
-        // }else if (emDias < 4){
-
-        // }
         console.log(emDias);
 
-        //Se colaborador logado for clt
         if (this.solicitacoes.isDecimo == true) {
           solicitacao.sol_isDecimo = true;
         } else {
@@ -149,8 +159,8 @@ export default {
           });
         } else {
           this.isLoading = true;
-          axios
-            .post("http://localhost:3000/cadastroSolicitacao", solicitacao)
+          api
+            .post("cadastroSolicitacao", solicitacao)
             .then((res) => {
               this.$router.push("/colaborador");
               this.isLoading = false;
@@ -173,6 +183,11 @@ export default {
           this.isLoading = false;
         }
       } catch (error) {
+        Vue.toasted.error("Não foi possível enviar sua solicitação!", {
+          className: "error",
+          duration: "7000",
+          position: "bottom-right",
+        });
         this.isLoading = false;
         console.log(error);
       }
@@ -188,8 +203,10 @@ export default {
         confirmButtonText: "Sim",
         buttonsStyling: false,
       }).then((res) => {
-        if (res.value) {
+        if (res.value && this.tipoContrato != "CLT") {
           this.handleDecimo();
+        } else {
+          this.solicitar();
         }
       });
     },

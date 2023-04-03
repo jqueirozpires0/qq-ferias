@@ -42,31 +42,33 @@ app.options('*', cors())
 
 //Verificação de token valido
 function verificarJWT(req, res, next) {
-    const token = req.headers.authorization || req.body.token || req.query.token;
-    if (token) {
-        jwt.verify(token, secret, function (err, decoded) {
-            if (err) {
-                return res.json({ success: false, message: 'Failed to authenticate token.' });
-            } else {
-                req.decoded = decoded;
-                next();
-            }
-        });
+    if (req.headers && req.headers.authorization) {
+        const token = req.headers.authorization.split(' ')[1]
+        if (token) {
+            jwt.verify(token, secret, function (err, decoded) {
+                if (err) {
+                    return res.json({ success: false, message: 'Failed to authenticate token.' });
+                } else {
+                    req.decoded = decoded;
+                    next();
+                }
+            });
 
+        } else {
+            return res.status(403).send({
+                success: false,
+                message: 'No token provided.'
+            });
+
+        }
     } else {
-        return res.status(403).send({
-            success: false,
-            message: 'No token provided.'
-        });
-
+        throw new Error("Token invalido");
     }
 }
-
 //Load-Session
 app.get('/load-session', (req, res) => {
     try {
-        const token = req.headers
-        console.log(req.headers)
+        const token = req.headers.authorization.split(' ')[1]
 
         jwt.verify(token, secret, (err, decoded) => {
             if (err) {
@@ -85,10 +87,30 @@ app.get('/load-session', (req, res) => {
     }
 })
 
+app.get('/info-colaborador', verificarJWT, (req, res) => {
+    const idUser = req.decoded.col_id
+    col_colaborador.findOne({
+        where: {
+            col_id: idUser
+        }
+    }).then((colaboradores) => {
+        res.send(colaboradores)
+    })
+})
+
+app.get('/info-gestor', verificarJWT, (req, res) => {
+    const idUser = req.decoded.col_id_gestor
+    col_colaborador.findOne({
+        where: {
+            col_id: idUser
+        }
+    }).then((gestor) => {
+        res.send(gestor)
+    });
+})
 //Login
 app.post('/login', async function (req, res) {
     try {
-        console.log(req)
         const { email, senha } = req.body;
         const colaborador = await col_colaborador.findOne({
             where: {
@@ -116,7 +138,6 @@ app.post('/login', async function (req, res) {
 
 //---------------------------------------Buscar todos colaboradores----------------------------------------//
 app.get('/colaboradores', function (req, res) {
-    console.log(req)
     col_colaborador.findAll().then((colaboradores) => {
         res.json(colaboradores);
     })
@@ -124,16 +145,11 @@ app.get('/colaboradores', function (req, res) {
 //------------------------------------------------------------------------------------------------------//
 
 //-------------------------------Buscar todos os colaboradores vinculados ao gestor---------------------------//
-app.get('/colaboradores-de-gestor', function (req, res) {
-    // fetch('/load-session')
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //         const userId = data.userId;
-    //         // Use o ID do usuário para fazer outras solicitações
-    //     });
+app.get('/colaboradores-de-gestor', verificarJWT, function (req, res) {
+    const id = req.decoded.col_id
     col_colaborador.findAll({
         where: {
-            col_id_gestor: 5
+            col_id_gestor: id
         }
     }).then((colaboradores) => {
         res.json(colaboradores);
@@ -177,7 +193,6 @@ app.get('/colaborador/:id', function (req, res) {
 //------------------------------------- Cadastro de um User (Colaborador)----------------------------------//
 app.post('/cadastro', async (req, res) => {
     try {
-        console.log(req.headers.authorization)
         const { col_nome, col_email, col_cpf, col_cnpj, col_contrato_tipo, col_matricula, col_senha, col_inicio_contrato, col_isFeriasLiberada, col_isGestor, col_isAdministrador, col_id_gestor, col_dias_ferias } = req.body;
 
         encryptedPassword = await bcrypt.hash(col_senha, 10);
@@ -216,9 +231,10 @@ app.post('/cadastro', async (req, res) => {
 //------------------------------------------------------------------------------------------------------//
 app.put('/colaboradores/:id', async (req, res) => {
     try {
+        const idUser = req.params.id
         const { col_nome, col_email, col_cpf, col_cnpj, col_contrato_tipo, col_matricula, col_senha, col_inicio_contrato, col_isFeriasLiberada, col_isGestor, col_isAdministrador, col_id_gestor, col_dias_ferias } = req.body;
 
-        // hash a senha novamente se a senha for alterada
+
         let encryptedPassword = null;
         if (col_senha) {
             encryptedPassword = await bcrypt.hash(col_senha, 10);
@@ -240,7 +256,7 @@ app.put('/colaboradores/:id', async (req, res) => {
             col_dias_ferias
         }, {
             where: {
-                col_id: req.params.id
+                col_id: idUser
             }
         });
 
@@ -250,7 +266,7 @@ app.put('/colaboradores/:id', async (req, res) => {
     }
 });
 //-----------------------------------------Get em todos gestores----------------------------//
-app.get('/gestores', function (req, res) {
+app.get('/gestores', verificarJWT, function (req, res) {
     col_colaborador.findAll({
         where: {
             col_isGestor: true
@@ -262,29 +278,58 @@ app.get('/gestores', function (req, res) {
 //------------------------------------------------------------------------------------------------------//
 
 //--------------------------------------Cadastro de solicitações-------------------------------------//
-app.post('/cadastroSolicitacao', async (req, res) => {
+app.post('/cadastroSolicitacao', verificarJWT, async (req, res) => {
     try {
-        const { sol_dt_solicitacao , sol_inicio, sol_fim, sol_status, sol_isDecimo , sol_id_col} = req.body;
-        const solicitacao = await sol_solicitacoes.create({
-            sol_dt_solicitacao: moment(),
-            sol_fim,
-            sol_inicio,
-            sol_isDecimo,
-            sol_status: 'analise',
-            sol_id_col                  /// id do colaborador logado
-        }).then(() => {
-            return res.json({
-                mensagem: "Férias cadastrada",
-            });
-
-        }).catch((error) => {
-            console.log(error)
-            return res.status(400).json({
-                mensagem: "Férias não foi cadastrada com sucesso!"
-            });
-        });
-
-        return solicitacao
+        const id = req.decoded.col_id
+        const diasDisponiveis = req.decoded.col_dias_ferias
+        if (diasDisponiveis == 0) {
+            throw new Error("Colaborador sem dias disponiveis");
+        } else {
+            sol_solicitacoes.findAll({
+                include: [
+                    {
+                        model: col_colaborador,
+                        require: false
+                    }
+                ]
+                ,
+                where: { '$col_collaborator.col_id$': id }
+            }).then(async (solicitacoes) => {
+                var tempoFerias = 0;
+                var quantidadeFerias = 0;
+                for (var index = 0; index < solicitacoes.length; index++) {
+                    if (solicitacoes[index].sol_status == 'aprovado' && moment(solicitacoes[index].sol_inicio).format('YYYY') == moment().format('YYYY')) {
+                        quantidadeFerias++
+                        tempoFerias = moment(solicitacoes[index].sol_fim).diff(moment(solicitacoes[index].sol_inicio), 'days')
+                    }
+                }
+                if ((quantidadeFerias <= 3 && tempoFerias <= 15)) {
+                    const { sol_inicio, sol_fim, sol_isDecimo } = req.body;
+                    await sol_solicitacoes.create({
+                        sol_dt_solicitacao: moment(),
+                        sol_fim,
+                        sol_inicio,
+                        sol_isDecimo,
+                        sol_status: 'analise',
+                        sol_id_col: id                  /// id do colaborador logado
+                    }).then((solicitacao) => {
+                        console.log("chegou aqui")
+                        if (moment(solicitacao.sol_fim).diff(moment(solicitacao.sol_inicio), 'days') > diasDisponiveis) {
+                            throw new Error("Férias maiores que o permitido");
+                        } else {
+                            return res.json({
+                                mensagem: "Férias cadastrada",
+                            });
+                        }
+                    })
+                } else {
+                    throw new Error("Férias invalidas");
+                }
+                res.json(solicitacoes);
+            }).catch((error) => {
+                console.log(error)
+            })
+        }
     } catch (error) {
         console.log(error)
     }
@@ -317,8 +362,9 @@ app.get('/solicitacoesTeste', function (req, res) {
 
 //-------------------------------------------------------------------------------------------------------//
 //------------------------------Todas solicitações da equipe de um gestor-----------------------------//
-app.get('/todas-solicitacoes-analise-gestor', function (req, res) {
+app.get('/todas-solicitacoes-analise-gestor', verificarJWT, function (req, res) {
     try {
+        const id = req.decoded.col_id
         sol_solicitacoes.findAll({
             include: [
                 {
@@ -327,22 +373,46 @@ app.get('/todas-solicitacoes-analise-gestor', function (req, res) {
                 }
             ]
             ,
-            where: { '$col_collaborator.col_id_gestor$': '5', sol_status: 'analise' }
+            where: { '$col_collaborator.col_id_gestor$': id, sol_status: 'analise' }
         }).then((solicitacoes) => {
             res.json(solicitacoes);
         }).catch((error) => {
-            console.log("erro aqui", error)
+            console.log(error)
         })
     } catch (error) {
-        console.log("erro aqui", error)
+        console.log(error)
     }
 })
+//------------------------------------------------------------------------------------------------------//
 
+//------------------------------ Todas solicitações da equipe desse funcionário -------------------------//
+app.get('/todas-solicitacoes-analise-equipe', verificarJWT, function (req, res) {
+    try {
+        const id = req.decoded.col_id_gestor
+        sol_solicitacoes.findAll({
+            include: [
+                {
+                    model: col_colaborador,
+                    require: false
+                }
+            ]
+            ,
+            where: { '$col_collaborator.col_id_gestor$': id, sol_status: 'analise' }
+        }).then((solicitacoes) => {
+            res.json(solicitacoes);
+        }).catch((error) => {
+            console.log(error)
+        })
+    } catch (error) {
+        console.log(error)
+    }
+})
 //------------------------------------------------------------------------------------------------------//
 
 //------------------------------------------Solicitações do colaborador----------------------------------//
-app.get('/todas-solicitacoes-colaborador', function (req, res) {
+app.get('/todas-solicitacoes-colaborador', verificarJWT, function (req, res) {
     try {
+        const id = req.decoded.col_id
         sol_solicitacoes.findAll({
             include: [
                 {
@@ -351,23 +421,24 @@ app.get('/todas-solicitacoes-colaborador', function (req, res) {
                 }
             ]
             ,
-            where: { '$col_collaborator.col_id$': '10' }
+            where: { '$col_collaborator.col_id$': id }
         }).then((solicitacoes) => {
             res.json(solicitacoes);
         }).catch((error) => {
-            console.log("erro aqui", error)
+            console.log(error)
         })
     } catch (error) {
-        console.log("erro aqui", error)
+        console.log(error)
     }
 })
 //------------------------------------------------------------------------------------------------------//
 
 //------------------------------ Pegar périodo aquisitivo ----------------------------------//
-app.get('/periodo-aquisitivo', function (req, res) {
+app.get('/periodo-aquisitivo', verificarJWT, function (req, res) {
+    const id = req.decoded.col_id
     col_colaborador.findAll({
         where: {
-            col_id: 17
+            col_id: id
         }
     }).then((colaboradores) => {
         var element = [];
@@ -386,7 +457,8 @@ app.get('/periodo-aquisitivo', function (req, res) {
 //------------------------------------------------------------------------------------------------------//
 
 //--------------------------------Pegar quantidade de solicitações no mes---------------------------------//
-app.get('/todas-solicitacoes-mensal', function (req, res) {
+app.get('/todas-solicitacoes-mensal', verificarJWT, function (req, res) {
+    const id = req.decoded.col_id
     try {
         sol_solicitacoes.findAll({
             include: [
@@ -396,7 +468,7 @@ app.get('/todas-solicitacoes-mensal', function (req, res) {
                 }
             ]
             ,
-            where: { '$col_collaborator.col_id_gestor$': '5', sol_status: 'analise' }
+            where: { '$col_collaborator.col_id_gestor$': id, sol_status: 'analise' }
         }).then((solicitacoes) => {
             var janeiro = 0;
             var fevereiro = 0;
@@ -463,7 +535,9 @@ app.get('/todas-solicitacoes-mensal', function (req, res) {
 //------------------------------------------------------------------------------------------------------//
 
 //--------------------------------------Pegar colaboradores de férias-------------------------------------//
-app.get('/todos-colaboradores-de-ferias-gestor', function (req, res) {
+app.get('/todos-colaboradores-de-ferias-gestor', verificarJWT, function (req, res) {
+
+    const id = req.decoded.col_id
     try {
         sol_solicitacoes.findAll({
             include: [
@@ -473,7 +547,7 @@ app.get('/todos-colaboradores-de-ferias-gestor', function (req, res) {
                 }
             ]
             ,
-            where: { '$col_collaborator.col_id_gestor$': '5' }
+            where: { '$col_collaborator.col_id_gestor$': id }
         }).then((solicitacoes) => {
             let element = [];
             for (var i = 0; i < solicitacoes.length; i++) {
@@ -493,7 +567,8 @@ app.get('/todos-colaboradores-de-ferias-gestor', function (req, res) {
 //------------------------------------------------------------------------------------------------------//
 
 //--------------------------------------Férias do colaborador---------------------------------------------//
-app.get('/colaboradores-e-suas-ferias', function (req, res) {
+app.get('/colaboradores-e-suas-ferias', verificarJWT, function (req, res) {
+    const id = req.decoded.col_id
     try {
         col_colaborador.findAll({
             include: [
@@ -503,7 +578,7 @@ app.get('/colaboradores-e-suas-ferias', function (req, res) {
                 }
             ]
             ,
-            where: { '$col_collaborator.col_id_gestor$': '5' }
+            where: { '$col_collaborator.col_id_gestor$': id }
         }).then((solicitacoes) => {
             function compare(a, b) {
                 return b.data - a.data;
@@ -539,12 +614,22 @@ app.get('/colaboradores-e-suas-ferias', function (req, res) {
 //---------------------------------------Aprovar férias--------------------------------------------------//
 app.put('/aprovar-ferias/:id', async function (req, res) {
     try {
-        const id = req.params.id;
+        const idSolicitacao = req.params.id;
         const solicitacao = await sol_solicitacoes.findOne({
             where: {
-                sol_id: 35
+                sol_id: idSolicitacao
             }
         });
+
+        var idColaborador = solicitacao.sol_id_col
+
+        const colaborador = await col_colaborador.findOne({
+            where: {
+                col_id: idColaborador
+            }
+        })
+        colaborador.col_dias_ferias = (colaborador.col_dias_ferias - moment(solicitacao.sol_fim).diff(moment(solicitacao.sol_inicio), 'days'));
+        await colaborador.save()
 
         if (solicitacao && solicitacao.sol_status === 'analise') {
             solicitacao.sol_status = 'aprovado';
@@ -564,10 +649,11 @@ app.put('/aprovar-ferias/:id', async function (req, res) {
 //----------------------------------------Reprovar férias--------------------------------------------------//
 app.put('/reprovar-ferias/:id', async function (req, res) {
     try {
-        const id = req.params.id;
+        const idSolicitacao = req.params.id
+        console.log(req.params.id)
         const solicitacao = await sol_solicitacoes.findOne({
             where: {
-                sol_id: 53
+                sol_id: idSolicitacao
             }
         });
 
