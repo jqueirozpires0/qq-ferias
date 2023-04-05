@@ -241,7 +241,7 @@ export default {
           col_contrato_tipo: this.colaborador.tipo_contratual,
           col_matricula: this.colaborador.matricula,
           col_senha: this.colaborador.senha,
-          col_inicio_contrato: this.colaborador.inicio_contrato,
+          col_inicio_contrato: moment(this.colaborador.inicio_contrato).add(1, 'hours'),
         };
         var diff = moment().diff(moment(this.colaborador.inicio_contrato));
         var emDias = moment.duration(diff).asDays();

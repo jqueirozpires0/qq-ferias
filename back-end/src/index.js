@@ -300,23 +300,36 @@ app.post('/cadastroSolicitacao', verificarJWT, async (req, res) => {
                 for (var index = 0; index < solicitacoes.length; index++) {
                     if (solicitacoes[index].sol_status == 'aprovado' && moment(solicitacoes[index].sol_inicio).format('YYYY') == moment().format('YYYY')) {
                         quantidadeFerias++
-                        tempoFerias = moment(solicitacoes[index].sol_fim).diff(moment(solicitacoes[index].sol_inicio), 'days')
+                        tempoFerias += moment(solicitacoes[index].sol_fim).diff(moment(solicitacoes[index].sol_inicio), 'days')
+                        console.log(tempoFerias, "teste aqui")
                     }
                 }
                 if ((quantidadeFerias <= 3 && tempoFerias <= 15)) {
                     const { sol_inicio, sol_fim, sol_isDecimo } = req.body;
                     await sol_solicitacoes.create({
-                        sol_dt_solicitacao: moment(),
+                        sol_dt_solicitacao: moment().add(1, 'hours'),
                         sol_fim,
                         sol_inicio,
                         sol_isDecimo,
                         sol_status: 'analise',
                         sol_id_col: id                  /// id do colaborador logado
                     }).then((solicitacao) => {
-                        console.log("chegou aqui")
-                        if (moment(solicitacao.sol_fim).diff(moment(solicitacao.sol_inicio), 'days') > diasDisponiveis) {
-                            throw new Error("Férias maiores que o permitido");
-                        } else {
+                        if(tempoFerias == 15 && quantidadeFerias == 3 && moment(solicitacao.sol_fim).diff(moment(solicitacao.sol_inicio), 'days') != 15){
+                            return res.status(400).json({
+                                mensagem: "Tempo de férias não respeita as regras do sistema"
+                            })
+                        }
+                        else if (moment(solicitacao.sol_fim).diff(moment(solicitacao.sol_inicio), 'days') > diasDisponiveis) {
+                            return res.status(400).json({
+                                mensagem: "Férias maiores que o permitido"
+                            })
+                        }
+                        else if (moment(solicitacao.sol_fim).diff(moment(solicitacao.sol_inicio), 'days') % 5 != 0){
+                            return res.status(400).json({
+                                mensagem: "Férias não então com 5, 10, 15, 20 ou 30 dias"
+                            })
+                        }
+                        else {
                             return res.json({
                                 mensagem: "Férias cadastrada",
                             });
@@ -445,7 +458,7 @@ app.get('/periodo-aquisitivo', verificarJWT, function (req, res) {
         for (var i = 0; i < colaboradores.length; i++) {
             const contrato = moment(colaboradores[i].col_inicio_contrato).format('DD/MM');
             const diaAtual = moment().format('DD/MM')
-            const inicioPeriodo = moment().subtract(1, 'months').format('DD/MM')
+            const inicioPeriodo = moment(colaboradores[i].col_inicio_contrato).subtract(1, 'months').format('DD/MM')
 
             if (moment(diaAtual, 'DD/MM').isAfter(moment(inicioPeriodo, 'DD/MM')) && moment(diaAtual, 'DD/MM').isBefore(moment(contrato, 'DD/MM')) && colaboradores[i].col_dias_ferias > 0) {
                 element = colaboradores

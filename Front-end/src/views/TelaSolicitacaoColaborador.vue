@@ -135,8 +135,8 @@ export default {
     solicitar: function () {
       try {
         let solicitacao = {
-          sol_inicio: this.solicitacoes.inicio,
-          sol_fim: this.solicitacoes.fim,
+          sol_inicio: moment(this.solicitacoes.inicio).add(1 , 'hours'),
+          sol_fim: moment(this.solicitacoes.fim).add(1 , 'hours'),
         };
 
         var diff = moment(this.solicitacoes.fim).diff(
