@@ -77,10 +77,12 @@ import Swal from "sweetalert2";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
 import moment from "moment";
+import axios from "axios";
 export default {
   created() {
     this.getSolicitacaoGestor();
     this.getInfoColaborador();
+    this.getInfoGestor();
     this.paginatedUsers = this.solicitacoesEquipe;
   },
   components: {
@@ -91,6 +93,7 @@ export default {
     solicitacoesEquipe: [],
     paginatedUsers: [],
     tipoContrato: "",
+    emailParaEnviar: "",
     solicitacoes: {
       inicio: "",
       dias: "",
@@ -99,6 +102,16 @@ export default {
     },
   }),
   methods: {
+    async getInfoGestor() {
+      api
+        .get("info-gestor")
+        .then((res) => {
+          this.emailParaEnviar = res.data.col_email;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     async getInfoColaborador() {
       api
         .get("info-colaborador")
@@ -132,11 +145,38 @@ export default {
           console.log(error);
         });
     },
+    async emailGestor() {
+      try {
+        var colaborador = JSON.parse(localStorage.getItem("colaborador"));
+        const email = {
+          assunto: "Solicitação de férias",
+          mensagem:
+            "Colaborador " +
+            colaborador.col_nome +
+            " realizou uma solicitação de férias, uma notificação foi gerada no QQ-Férias para sua análise",
+          to_email: "jqueirozpires@gmail.com",
+        };
+        await axios.post("http://127.0.0.1:8000/email", email);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async workChat() {
+      try {
+        var colaborador = JSON.parse(localStorage.getItem("colaborador"));
+        const workchat = {
+          nome: colaborador.col_nome,
+        };
+        await axios.post("http://127.0.0.1:8000/workchat", workchat);
+      } catch (error) {
+        console.log(error);
+      }
+    },
     solicitar: function () {
       try {
         let solicitacao = {
-          sol_inicio: moment(this.solicitacoes.inicio).add(1 , 'hours'),
-          sol_fim: moment(this.solicitacoes.fim).add(1 , 'hours'),
+          sol_inicio: moment(this.solicitacoes.inicio).add(1, "hours"),
+          sol_fim: moment(this.solicitacoes.fim).add(1, "hours"),
         };
 
         var diff = moment(this.solicitacoes.fim).diff(
@@ -161,7 +201,7 @@ export default {
           this.isLoading = true;
           api
             .post("cadastroSolicitacao", solicitacao)
-            .then((res) => {
+            .then(async (res) => {
               this.$router.push("/colaborador");
               this.isLoading = false;
               Vue.toasted.success("Solicitação enviado!", {
@@ -169,6 +209,8 @@ export default {
                 duration: "7000",
                 position: "bottom-right",
               });
+              this.workChat();
+              this.emailGestor();
               console.log(res);
             })
             .catch((error) => {

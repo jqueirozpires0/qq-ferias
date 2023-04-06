@@ -59,6 +59,7 @@ import api from "@/modules/services/api";
 import moment from "moment";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
+import axios from "axios";
 
 export default {
   components: {
@@ -99,6 +100,42 @@ export default {
           console.log(error);
         });
     },
+    async emailColaboradorAprovado(item) {
+      try {
+        console.log(item);
+        var colaborador = JSON.parse(localStorage.getItem("colaborador"));
+        const email = {
+          assunto: "Sua solicitação foi aprovada!",
+          mensagem:
+            "Gestor " +
+            colaborador.col_nome +
+            " aprovou sua solicitação de férias," +
+            item.solicitacao,
+          to_email: "jqueirozpires@gmail.com",
+        };
+        await axios.post("http://127.0.0.1:8000/email", email);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async emailColaboradorReprovado(item) {
+      try {
+        console.log(item);
+        var colaborador = JSON.parse(localStorage.getItem("colaborador"));
+        const email = {
+          assunto: "Sua solicitação foi reprovada!",
+          mensagem:
+            "Gestor " +
+            colaborador.col_nome +
+            " recusou sua solicitação de férias," +
+            item.solicitacao,
+          to_email: "jqueirozpires@gmail.com",
+        };
+        await axios.post("http://127.0.0.1:8000/email", email);
+      } catch (error) {
+        console.log(error);
+      }
+    },
     async getColaboradoresSemFerias() {
       this.isLoading = true;
       api
@@ -132,6 +169,7 @@ export default {
               position: "bottom-right",
             }
           );
+          this.emailColaboradorAprovado(item);
           this.$router.push({ name: "Perfil Gestor" });
           return res;
         })
@@ -145,7 +183,7 @@ export default {
       api
         .put("reprovar-ferias/" + item.id)
         .then((res) => {
-          console.log(item)
+          console.log(item);
           this.isLoading = false;
           Vue.toasted.error(
             "Férias Recusadas! Uma notificação será enviada para o colaborador",
@@ -155,6 +193,7 @@ export default {
               position: "bottom-right",
             }
           );
+          this.emailColaboradorReprovado(item)
           this.$router.push({ name: "Perfil Gestor" });
           return res;
         })

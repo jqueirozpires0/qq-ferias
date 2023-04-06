@@ -301,7 +301,6 @@ app.post('/cadastroSolicitacao', verificarJWT, async (req, res) => {
                     if (solicitacoes[index].sol_status == 'aprovado' && moment(solicitacoes[index].sol_inicio).format('YYYY') == moment().format('YYYY')) {
                         quantidadeFerias++
                         tempoFerias += moment(solicitacoes[index].sol_fim).diff(moment(solicitacoes[index].sol_inicio), 'days')
-                        console.log(tempoFerias, "teste aqui")
                     }
                 }
                 if ((quantidadeFerias <= 3 && tempoFerias <= 15)) {
