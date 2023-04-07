@@ -152,6 +152,7 @@ export default {
             confirmButtonClass: "md-button md-success btn-fill",
             buttonsStyling: false,
           });
+          this.getColaboradores();
           return res;
         })
         .catch((error) => {
@@ -163,6 +164,7 @@ export default {
     },
     async getColaboradores() {
       this.isLoading = true;
+      this.colaboradores = []
       api
         .get("colaboradores")
         .then((res) => {

@@ -40,8 +40,16 @@ export default {
       senha: "",
     },
   }),
+  props: {
+    menuLoginBody: {
+      type: String,
+      default: "0px",
+    },
+  },
 
-  created() {},
+  created() {
+    window.document.body.style.paddingLeft = "0px";
+  },
 
   methods: {
     ...mapActions("auth", ["ActionLogin"]),
@@ -49,7 +57,7 @@ export default {
     async submit() {
       try {
         await this.ActionLogin(this.form);
-        var colaborador = JSON.parse(localStorage.getItem("colaborador"))
+        var colaborador = JSON.parse(localStorage.getItem("colaborador"));
         if (colaborador.col_isGestor == true) {
           this.$router.push({ name: "Perfil Gestor" });
         } else if (colaborador.col_isAdministrador == true) {

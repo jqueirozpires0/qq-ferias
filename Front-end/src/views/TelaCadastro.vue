@@ -301,7 +301,6 @@ export default {
           });
       } catch (error) {
         this.isLoading = false;
-        console.log(this.colaborador.id_gestor);
         console.log(error);
       }
     },

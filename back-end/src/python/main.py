@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import io
+import csv
+from typing import List
+from fastapi.responses import StreamingResponse
 import smtplib
 import requests
+import pandas as pd
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
@@ -23,6 +28,11 @@ class Email(BaseModel):
     to_email: str
     assunto: str
     mensagem: str
+
+class Relatorio(BaseModel):
+    colaborador: List[str]
+    status: List[str]
+    diasDisponiveis: List[int]
 
 class Workchat(BaseModel):
     nome: str
@@ -75,6 +85,40 @@ async def enviar_email(email: Email):
 
         server.sendmail(from_email, to_email, message)
         server.quit()
+
+    except Exception as e:
+        print("Error no envio do email", type(e).__name__)
+
+
+@app.post("/relatorio")
+async def gerar_relatorio(relatorio: Relatorio):
+    print(relatorio)
+    try:
+        info = {"Colaborador": relatorio.colaborador, "Status": relatorio.status, "Dias para férias": relatorio.diasDisponiveis}
+
+        # Abre o arquivo CSV para escrita
+        with open('relatorio.csv', mode='w', newline='') as arquivo_csv:
+            # Cria o escritor CSV
+            escritor_csv = csv.writer(arquivo_csv)
+
+            # Escreve os cabeçalhos das colunas
+            escritor_csv.writerow(["Colaborador", "Status", "Dias para férias"])
+
+            # Escreve os dados no arquivo CSV
+            for i in range(len(relatorio.colaborador)):
+                escritor_csv.writerow([relatorio.colaborador[i], relatorio.status[i], relatorio.diasDisponiveis[i]])
+
+        with open('relatorio.csv', mode='r') as arquivo_csv:
+            # Lê o conteúdo do arquivo CSV
+            conteudo_csv = arquivo_csv.read()
+
+        headers = {
+            "Content-Disposition": "attachment; filename=relatorio.csv",
+        }
+
+        # Retorna o conteúdo do arquivo CSV como resposta HTTP
+        return Response(content=conteudo_csv, media_type='text/csv', headers=headers)
+                
 
     except Exception as e:
         print("Error no envio do email", type(e).__name__)

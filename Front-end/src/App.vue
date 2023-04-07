@@ -14,12 +14,6 @@ export default {
   components: {
     SidebarHome,
   },
-  props: {
-    menuLoginBody: {
-      type: String,
-      default: "0px",
-    },
-  },
   computed: {
     showSideBar() {
       return this.$route.name !== "Login";

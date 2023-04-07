@@ -10,7 +10,9 @@
         <md-icon style="padding-right: 20px" id="icon-superior"
           >dashboard</md-icon
         >Dashboard
-        <md-button id="relatorio-button">Gerar Relatório</md-button>
+        <md-button @click="downloadRelatorio()" id="relatorio-button"
+          >Gerar Relatório</md-button
+        >
       </h1>
       <div class="md-layout" style="margin-top: 3%">
         <div class="md-layout-item">
@@ -183,6 +185,7 @@ import StatsCard from "@/components/StatsCard.vue";
 import Loading from "vue-loading-overlay";
 import "/node_modules/vue-loading-overlay/dist/vue-loading.css";
 import api from "@/modules/services/api";
+import axios from "axios";
 
 export default {
   components: {
@@ -201,6 +204,38 @@ export default {
     paginatedUsers: [],
   }),
   methods: {
+    async downloadRelatorio() {
+      try {
+        let colaborador = [];
+        let status = [];
+        let diasDisponiveis = [];
+        for (var i = 0; i < this.paginatedUsers.length; i++) {
+          colaborador.push(this.paginatedUsers[i].nome);
+          status.push(this.paginatedUsers[i].status);
+          diasDisponiveis.push(this.paginatedUsers[i].diasDisponiveis);
+        }
+        let relatorio = {
+          colaborador: colaborador,
+          status: status,
+          diasDisponiveis: diasDisponiveis,
+        };
+        const response = await axios.post("http://127.0.0.1:8000/relatorio", relatorio);
+
+        // Cria um objeto Blob com o conteúdo da resposta
+        const blob = new Blob([response.data], { type: "text/csv" });
+
+        // Cria um link de download no DOM
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "relatorio.csv";
+
+        // Adiciona o link no DOM e aciona o download
+        document.body.appendChild(link);
+        link.click();
+      } catch (error) {
+        console.error(error);
+      }
+    },
     async getColaboradores() {
       this.isLoading = true;
       var nomes = [];
@@ -210,8 +245,10 @@ export default {
           for (var i = 0; i < res.data.length; i++) {
             {
               this.paginatedUsers.push({
+                id: res.data[i].col_collaborator.col_id,
                 nome: res.data[i].col_collaborator.col_nome,
                 status: "Férias",
+                diasDisponiveis: res.data[i].col_collaborator.col_dias_ferias,
               });
             }
             this.colaboradoresFerias.push({
@@ -236,8 +273,10 @@ export default {
           for (var i = 0; i < res.data.length; i++) {
             if (!nomes.includes(res.data[i].col_nome)) {
               this.paginatedUsers.push({
+                id: res.data[i].col_id,
                 nome: res.data[i].col_nome,
                 status: "Trabalhando",
+                diasDisponiveis: res.data[i].col_dias_ferias,
               });
             }
           }
@@ -256,7 +295,6 @@ export default {
             var mes = res.data[i];
             this.solicitacoes.push({ mes });
           }
-          console.log(this.solicitacoes)
           this.isLoading = false;
         })
         .catch((error) => {

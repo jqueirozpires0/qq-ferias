@@ -105,7 +105,6 @@ export default {
     this.getPeriodoAquisitivo();
     this.getInfoColaborador();
     this.getInfoGestor();
-    console.log(this.solicitacoes)
   },
   data: () => ({
     solicitacoes: [],

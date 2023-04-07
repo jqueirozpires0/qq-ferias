@@ -117,7 +117,6 @@ export default {
         .get("info-colaborador")
         .then((res) => {
           this.tipoContrato = res.data.col_contrato_tipo;
-          console.log(this.tipoContrato);
         })
         .catch((error) => {
           console.log(error);
@@ -179,12 +178,6 @@ export default {
           sol_fim: moment(this.solicitacoes.fim).add(1, "hours"),
         };
 
-        var diff = moment(this.solicitacoes.fim).diff(
-          moment(this.solicitacoes.inicio)
-        );
-        var emDias = moment.duration(diff).asDays();
-        console.log(emDias);
-
         if (this.solicitacoes.isDecimo == true) {
           solicitacao.sol_isDecimo = true;
         } else {
@@ -211,7 +204,7 @@ export default {
               });
               this.workChat();
               this.emailGestor();
-              console.log(res);
+              return res
             })
             .catch((error) => {
               this.isLoading = false;

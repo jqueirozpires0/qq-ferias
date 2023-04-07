@@ -1,5 +1,5 @@
 <template>
-  <form autocomplete="off" @submit.prevent="cadastrar()" method="post">
+  <form autocomplete="off" @submit.prevent="update()" method="put">
     <md-card>
       <loading
         :active.sync="isLoading"
@@ -10,7 +10,7 @@
         <div>
           <img class="logo-image" src="../assets/quero.png" />
         </div>
-        <h2 class="title">Cadastro de colaborador</h2>
+        <h2 class="title">Editar colaborador</h2>
       </md-card-header>
       <md-card-content>
         <div class="md-layout">
@@ -21,7 +21,7 @@
                 type="text"
                 class="form-control"
                 id="nome"
-                v-model="colaborador.nome"
+                v-model="colaborador.col_nome"
                 name="nome"
                 placeholder="Nome colaborador"
               ></md-input>
@@ -34,7 +34,7 @@
                 type="email"
                 class="form-control"
                 id="email"
-                v-model="colaborador.email"
+                v-model="colaborador.col_email"
                 name="email"
                 placeholder="Email do colaborador"
               ></md-input>
@@ -47,7 +47,7 @@
                 type="text"
                 class="form-control"
                 id="matricula"
-                v-model="colaborador.matricula"
+                v-model="colaborador.col_matricula"
                 name="matricula"
                 placeholder="Matricula do colaborador"
               ></md-input>
@@ -62,7 +62,7 @@
                 class="form-control"
                 id="data-contrato"
                 max="2023-12-31"
-                v-model="colaborador.inicio_contrato"
+                v-model="colaborador.col_inicio_contrato"
                 name="contrato"
               ></md-input>
             </md-field>
@@ -71,7 +71,7 @@
             <md-field>
               <md-select
                 required
-                v-model="colaborador.tipo_contratual"
+                v-model="colaborador.col_contrato_tipo"
                 name="contrato"
                 id="contrato"
                 placeholder="Tipo de contrato"
@@ -90,7 +90,7 @@
                 class="form-control"
                 md-counter="false"
                 id="cnpj"
-                v-model="colaborador.cnpj"
+                v-model="colaborador.col_cnpj"
                 name="cnpj"
                 placeholder="CNPJ do colaborador"
               ></md-input>
@@ -103,7 +103,7 @@
                 v-mask="'###.###.###-##'"
                 class="form-control"
                 id="cpf"
-                v-model="colaborador.cpf"
+                v-model="colaborador.col_cpf"
                 name="cpf"
                 placeholder="CPF do colaborador"
               ></md-input>
@@ -118,7 +118,7 @@
                 maxlength="18"
                 md-counter="false"
                 id="senha"
-                v-model="colaborador.senha"
+                v-model="senha"
                 name="senha"
                 placeholder="Senha da colaborador"
               ></md-input>
@@ -128,7 +128,7 @@
             <md-field>
               <label>Gestores</label>
               <md-select
-                v-model="colaborador.id_gestor"
+                v-model="colaborador.col_id_gestor"
                 id="gestor"
                 placeholder="Gestor responsável"
               >
@@ -143,18 +143,14 @@
             </md-field>
           </div>
           <div class="div-radio">
-            <md-radio v-model="colaborador.cargo" value="Gestor"
-              >Gestor</md-radio
-            >
-            <md-radio v-model="colaborador.cargo" value="Colaborador"
-              >Colaborador</md-radio
-            >
-            <md-radio v-model="colaborador.cargo" value="Administrador"
+            <md-radio v-model="cargo" value="Gestor">Gestor</md-radio>
+            <md-radio v-model="cargo" value="Colaborador">Colaborador</md-radio>
+            <md-radio v-model="cargo" value="Administrador"
               >Administrador</md-radio
             >
           </div>
         </div>
-        <md-button class="md-raised" type="submit">Cadastrar</md-button>
+        <md-button class="md-raised" type="submit">Editar</md-button>
       </md-card-content>
     </md-card>
   </form>
@@ -217,6 +213,8 @@ export default {
       tipoContratoCLT: false,
       tipoContratoPJ: false,
       cargoColaborador: false,
+      cargo: "",
+      senha: "qq@2023",
       colaborador: {},
       submitted: false,
     };
@@ -225,12 +223,12 @@ export default {
     update: async function () {
       try {
         let colaborador = {
-          col_nome: this.colaborador.nome,
-          col_email: this.colaborador.email,
-          col_contrato_tipo: this.colaborador.tipo_contratual,
-          col_matricula: this.colaborador.matricula,
-          col_senha: this.colaborador.senha,
-          col_inicio_contrato: this.colaborador.inicio_contrato,
+          col_nome: this.colaborador.col_nome,
+          col_email: this.colaborador.col_email,
+          col_contrato_tipo: this.colaborador.col_contrato_tipo,
+          col_matricula: this.colaborador.col_matricula,
+          col_senha: this.senha,
+          col_inicio_contrato: this.colaborador.col_inicio_contrato,
         };
         var diff = moment().diff(moment(this.colaborador.inicio_contrato));
         var emDias = moment.duration(diff).asDays();
@@ -242,46 +240,45 @@ export default {
           colaborador.col_isFeriasLiberada = false;
           colaborador.col_dias_ferias = 0;
         }
-        if (this.colaborador.id_gestor == "") {
+        if (this.colaborador.col_id_gestor == "") {
           colaborador.col_id_gestor = null;
         } else {
-          colaborador.col_id_gestor = this.colaborador.id_gestor;
+          colaborador.col_id_gestor = this.colaborador.col_id_gestor;
         }
-        if (this.colaborador.cpf == "") {
+        if (this.colaborador.col_cpf == "") {
           colaborador.col_cpf = null;
         } else {
-          colaborador.col_cpf = this.colaborador.cpf;
+          colaborador.col_cpf = this.colaborador.col_cpf;
         }
-        if (this.colaborador.cnpj == "") {
+        if (this.colaborador.col_cnpj == "") {
           colaborador.col_cnpj = null;
         } else {
-          colaborador.col_cnpj = this.colaborador.cnpj;
+          colaborador.col_cnpj = this.colaborador.col_cnpj;
         }
-        if (this.colaborador.cargo == "Gestor") {
+        if (this.cargo == "Gestor") {
           colaborador.col_isGestor = true;
         } else {
           colaborador.col_isGestor = false;
         }
-        if (this.colaborador.cargo == "Administrador") {
+        if (this.cargo == "Administrador") {
           colaborador.col_isAdministrador = true;
         } else {
           colaborador.col_isAdministrador = false;
         }
         this.isLoading = true;
         api
-          .put("edit/" + colaborador.col_id, colaborador)
+          .put("colaborador/" + this.colaborador.col_id, colaborador)
           .then((res) => {
-            this.$router.push("/administrador");
             Vue.toasted.success("Colaborador editado!", {
               className: "success",
               duration: "7000",
               position: "bottom-right",
             });
-            console.log(res);
+            this.$router.push("/administrador");
+            return res
           })
           .catch((error) => {
             this.isLoading = false;
-            console.log(this.colaborador.id_gestor);
             Vue.toasted.error("Não foi possível editar o colaborador!", {
               className: "error",
               duration: "7000",
@@ -291,7 +288,6 @@ export default {
           });
       } catch (error) {
         this.isLoading = false;
-        console.log(this.colaborador.id_gestor);
         console.log(error);
       }
     },
@@ -310,15 +306,36 @@ export default {
           console.log(error);
         });
     },
+    async getColaborador() {
+      api
+        .get("info-colaborador")
+        .then((res) => {
+          this.colaborador = res.data;
+          this.colaborador.col_inicio_contrato = moment(
+            this.colaborador.col_inicio_contrato
+          ).format("YYYY-MM-DD");
+          if (this.colaborador.COL_isGestor == true) {
+            this.cargo = "Gestor";
+          } else if (this.colaborador.col_isAdministrador) {
+            this.cargo = "Administrador";
+          } else {
+            this.cargo = "Colaborador";
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
   },
   mounted() {
     if (this.$route.query.item) {
       this.id = this.$route.query.item;
     }
     this.getGestores();
+    this.getColaborador();
   },
   watch: {
-    "colaborador.tipo_contratual": function () {
+    "colaborador.col_contrato_tipo": function () {
       if (this.colaborador.tipo_contratual == "PJ") {
         this.tipoContratoPJ = true;
         this.tipoContratoCLT = false;
@@ -327,8 +344,8 @@ export default {
         this.tipoContratoPJ = false;
       }
     },
-    "colaborador.cargo": function () {
-      if (this.colaborador.cargo == "Colaborador") {
+    cargo: function () {
+      if (this.cargo == "Colaborador") {
         this.cargoColaborador = true;
       } else {
         this.cargoColaborador = false;

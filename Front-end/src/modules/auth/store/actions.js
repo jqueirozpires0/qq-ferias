@@ -49,7 +49,6 @@ export const ActionLoadSession = ({ dispatch }) => {
               } =  await api.get('load-session')
               dispatch('ActionSetToken', token)
               dispatch('ActionSetUser', colaborador)
-              console.log(data)
 
               resolve()
         } catch (error) {

@@ -101,6 +101,7 @@ export default {
   name: "Sidebar-home",
   data() {
     return {
+      telaLogin: false,
       isOpened: false,
       totalSolicitacoes: [],
       totalAvisos: [],
@@ -108,10 +109,6 @@ export default {
     };
   },
   props: {
-    menuLoginBody: {
-      type: String,
-      default: "0px",
-    },
     //! Menu settings
     isMenuOpen: {
       type: Boolean,
@@ -299,11 +296,6 @@ export default {
   },
   watch: {
     isOpened() {
-      if (this.$router.name === "Login") {
-        this.menuLoginBody
-        console.log("dentro")
-      }
-      console.log(window.location.href)
       window.document.body.style.paddingLeft =
         this.isOpened && this.isPaddingLeft
           ? this.menuOpenedPaddingLeftBody

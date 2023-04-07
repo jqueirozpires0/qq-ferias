@@ -11,7 +11,14 @@ export default async (to, from, next) => {
       }
     } else {
       if (to.name === 'Login' && store.getters['auth/hasToken']) {
-        next({ name: 'Perfil Administrador' })
+        var colaborador = JSON.parse(localStorage.getItem("colaborador"));
+        if (colaborador.col_isGestor == true) {
+          next({ name: 'Perfil Gestor' })
+        } else if (colaborador.col_isAdministrador == true) {
+          next({ name: 'Perfil Administrador' })
+        } else {
+          next({ name: 'Perfil Colaborador' })
+        }
       } else {
         next()
       }

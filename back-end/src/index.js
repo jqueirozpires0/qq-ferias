@@ -8,7 +8,6 @@ const sol_solicitacoes = require('./modules/sol_solicitacoes')
 const secret = 'secret';
 cors = require('cors');
 const porta = 3000
-const blacklist = []
 const moment = require('moment');
 
 app.listen(porta, () => {
@@ -160,30 +159,48 @@ app.get('/colaboradores-de-gestor', verificarJWT, function (req, res) {
 //Deletar um colaborador específico (falta)
 app.delete('/colaborador/:id', function (req, res) {
     try {
-        if (!req.params.id) {
-            res.status(400);
-            res.send({ message: 'Informe o ID do produto!' });
-            return;
-        }
-
         let { id } = req.params;
-        col_colaborador.get('/colaborador/:id').then((colaboradores) => {
-            if (colaboradores) {
-                colaboradores.isDeleted = true;
-            } else
-                res.status(404).send();
+        col_colaborador.destroy({
+            where:{
+                col_id: id
+            }
+        }).then((colaboradores) => {
+            res.status(200).send('Colaborador excluído com sucesso.');
+        }).catch((error) =>{
+            res.status(500).send('Erro ao processar a requisição.');
         })
     } catch (error) {
-
+        console.log(error)
     }
 })
 
 //-----------------------------------Retornar um colaborador específico (falta)----------------------------------------//
-app.get('/colaborador/:id', function (req, res) {
+app.put('/colaborador/:id', async function (req, res) {
     let { id } = req.params;
-    col_colaborador.findByPk(id).then((colaboradores) => {
-        if (colaboradores) {
-            res.json(colaboradores);
+    const colaborador = col_colaborador.findOne({
+        where:{
+            col_id: id
+        }
+    }).then( async (colaborador) => {
+        if (colaborador) {
+            encryptedPassword = await bcrypt.hash(req.body.col_senha, 10);
+
+            colaborador.col_nome = req.body.col_nome,
+            colaborador.col_email = req.body.col_email,
+            colaborador.col_cpf = req.body.col_cpf,
+            colaborador.col_cnpj = req.body.col_cnpj,
+            colaborador.col_contrato_tipo = req.body.col_contrato_tipo,
+            colaborador.col_matricula = req.body.col_matricula,
+            colaborador.col_senha = encryptedPassword,
+            colaborador.col_inicio_contrato = req.body.col_inicio_contrato,
+            colaborador.col_isFeriasLiberada = req.body.col_isFeriasLiberada,
+            colaborador.col_isGestor = req.body.col_isGestor,
+            colaborador.col_isAdministrador = req.body.col_isAdministrador,
+            colaborador.col_id_gestor = req.body.col_id_gestor,
+            colaborador.col_dias_ferias = req.body.col_dias_ferias
+            await colaborador.save();
+
+            res.json(colaborador);
         } else
             res.status(404).send();
     })
@@ -358,7 +375,7 @@ app.get('/solicitacoes', verificarJWT, function (req, res) {
     }).then((solicitacoes) => {
         res.json(solicitacoes);
     }).catch((error) => {
-        console.log(error, "Aqui")
+        console.log(error)
     })
 })
 
@@ -541,7 +558,7 @@ app.get('/todas-solicitacoes-mensal', verificarJWT, function (req, res) {
             console.log(error)
         })
     } catch (error) {
-        console.log("erro aqui", error)
+        console.log(error)
     }
 })
 //------------------------------------------------------------------------------------------------------//
@@ -570,10 +587,10 @@ app.get('/todos-colaboradores-de-ferias-gestor', verificarJWT, function (req, re
             }
             res.json(element)
         }).catch((error) => {
-            console.log("erro aqui", error)
+            console.log(error)
         })
     } catch (error) {
-        console.log("erro aqui", error)
+        console.log(error)
     }
 })
 //------------------------------------------------------------------------------------------------------//
@@ -615,10 +632,10 @@ app.get('/colaboradores-e-suas-ferias', verificarJWT, function (req, res) {
             res.send(objetosUnicos)
 
         }).catch((error) => {
-            console.log("erro aqui", error)
+            console.log(error)
         })
     } catch (error) {
-        console.log("erro aqui", error)
+        console.log(error)
     }
 })
 //------------------------------------------------------------------------------------------------------//
@@ -662,7 +679,6 @@ app.put('/aprovar-ferias/:id', async function (req, res) {
 app.put('/reprovar-ferias/:id', async function (req, res) {
     try {
         const idSolicitacao = req.params.id
-        console.log(req.params.id)
         const solicitacao = await sol_solicitacoes.findOne({
             where: {
                 sol_id: idSolicitacao
