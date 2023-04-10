@@ -81,6 +81,7 @@ import axios from "axios";
 export default {
   created() {
     this.getSolicitacaoGestor();
+    this.getSolicitacoes();
     this.getInfoColaborador();
     this.getInfoGestor();
     this.paginatedUsers = this.solicitacoesEquipe;
@@ -94,6 +95,7 @@ export default {
     paginatedUsers: [],
     tipoContrato: "",
     emailParaEnviar: "",
+    historicoSolicitacoes: [],
     solicitacoes: {
       inicio: "",
       dias: "",
@@ -102,6 +104,22 @@ export default {
     },
   }),
   methods: {
+    async getSolicitacoes() {
+      api
+        .get("todas-solicitacoes-colaborador")
+        .then((res) => {
+          for (var i = 0; i < res.data.length; i++) {
+            if (res.data[i].sol_status == "aprovado") {
+              this.historicoSolicitacoes.push({
+                solicitacao: res.data[i],
+              });
+            }
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     async getInfoGestor() {
       api
         .get("info-gestor")
@@ -154,6 +172,7 @@ export default {
             colaborador.col_nome +
             " realizou uma solicitação de férias, uma notificação foi gerada no QQ-Férias para sua análise",
           to_email: "jqueirozpires@gmail.com",
+          //allan.souza@verdecard.com.br
         };
         await axios.post("http://127.0.0.1:8000/email", email);
       } catch (error) {
@@ -173,19 +192,56 @@ export default {
     },
     solicitar: function () {
       try {
+        var colaborador = JSON.parse(localStorage.getItem("colaborador"));
         let solicitacao = {
           sol_inicio: moment(this.solicitacoes.inicio).add(1, "hours"),
           sol_fim: moment(this.solicitacoes.fim).add(1, "hours"),
         };
-
         if (this.solicitacoes.isDecimo == true) {
           solicitacao.sol_isDecimo = true;
         } else {
           solicitacao.sol_isDecimo = false;
         }
-
         if (this.solicitacoes.fim < this.solicitacoes.inicio) {
           Vue.toasted.error("Data inicio maior que data final", {
+            className: "error",
+            duration: "7000",
+            position: "bottom-right",
+          });
+        } else if (
+          this.solicitacoes.fim == "" ||
+          this.solicitacoes.inicio == ""
+        ) {
+          Vue.toasted.error("Data vazia", {
+            className: "error",
+            duration: "7000",
+            position: "bottom-right",
+          });
+        } else if (this.historicoSolicitacoes) {
+          var total = 0;
+          for (var i = 0; i < this.historicoSolicitacoes.length; i++) {
+            total += moment(this.historicoSolicitacoes.sol_fim).diff(
+              moment(this.historicoSolicitacoes.sol_inicio)
+            );
+          }
+          if (
+            total == 15 &&
+            this.historicoSolicitacoes.length == 3 &&
+            moment(this.solicitacoes.fim).diff(
+              moment(this.solicitacoes.inicio)
+            ) != 15
+          ) {
+            Vue.toasted.error("Regra dos 15 dias não respeitada", {
+              className: "error",
+              duration: "7000",
+              position: "bottom-right",
+            });
+          }
+        } else if (
+          colaborador.col_diasDisponiveis <
+          moment(this.solicitacoes.fim).diff(moment(this.solicitacoes.inicio))
+        ) {
+          Vue.toasted.error("Tempo de solicitação maior que o permitido", {
             className: "error",
             duration: "7000",
             position: "bottom-right",
@@ -195,6 +251,7 @@ export default {
           api
             .post("cadastroSolicitacao", solicitacao)
             .then(async (res) => {
+              console.log("entrou then");
               this.$router.push("/colaborador");
               this.isLoading = false;
               Vue.toasted.success("Solicitação enviado!", {
@@ -204,9 +261,10 @@ export default {
               });
               this.workChat();
               this.emailGestor();
-              return res
+              console.log(res);
             })
             .catch((error) => {
+              console.log("entrou catch");
               this.isLoading = false;
               Vue.toasted.error("Não foi possível enviar sua solicitação!", {
                 className: "error",
@@ -218,6 +276,7 @@ export default {
           this.isLoading = false;
         }
       } catch (error) {
+        console.log("entrou catch 2");
         Vue.toasted.error("Não foi possível enviar sua solicitação!", {
           className: "error",
           duration: "7000",
@@ -238,10 +297,13 @@ export default {
         confirmButtonText: "Sim",
         buttonsStyling: false,
       }).then((res) => {
-        if (res.value && this.tipoContrato != "CLT") {
-          this.handleDecimo();
-        } else {
-          this.solicitar();
+        console.log(res.value);
+        if (res.value) {
+          if (this.tipoContrato == "CLT") {
+            this.handleDecimo();
+          } else {
+            this.solicitar();
+          }
         }
       });
     },

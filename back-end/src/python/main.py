@@ -12,6 +12,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
+#cd python
+#python -m uvicorn main:app --reload
+
 app = FastAPI()
 
 origins = ["http://localhost:8080"]
@@ -53,6 +56,7 @@ async def mensagem_workchat(workchat: Workchat):
         data = {
             "messaging_type": "UPDATE",
             "recipient": {
+                #100081114973496
             "id": 100089568551133
             },
             "message": {
@@ -76,7 +80,6 @@ async def enviar_email(email: Email):
         server = smtplib.SMTP(smpt_server, smpt_port)
         server.ehlo()
 
-        print(email)
         assunto = email.assunto
         mensagem = email.mensagem
         to_email = email.to_email

@@ -6,7 +6,13 @@
       :is-full-page="true"
     ></loading>
     <div>
-      <md-table v-model="solicitacoesEquipe" id="table-solicitacoes">
+      <div
+        class="colaboradores-vazio"
+        v-if="this.solicitacoesEquipe.length <= 0"
+      >
+        <h1>Ainda não possui solicitações</h1>
+      </div>
+      <md-table v-else v-model="solicitacoesEquipe" id="table-solicitacoes">
         <md-table-toolbar>
           <h1 style="margin-inline: auto">Solicitações</h1>
         </md-table-toolbar>
@@ -29,7 +35,13 @@
           </md-table-cell>
         </md-table-row>
       </md-table>
-      <md-table v-model="periodoAquisitivoEquipe" id="table-avisos">
+      <div
+        class="colaboradores-vazio"
+        v-if="this.periodoAquisitivoEquipe.length <= 0"
+      >
+        <h1>Ainda não possui avisos</h1>
+      </div>
+      <md-table v-else v-model="periodoAquisitivoEquipe" id="table-avisos">
         <md-table-toolbar>
           <h1 style="margin-inline: auto">Avisos</h1>
         </md-table-toolbar>
@@ -143,11 +155,10 @@ export default {
         .then((res) => {
           this.isLoading = false;
           for (var i = 0; i < res.data.length; i++) {
-            if (res.data[i].dias == 30)
-              this.periodoAquisitivoEquipe.push({
-                nome: res.data[i].nome,
-                mensagem: "Colaborador prestes a acumular 2 anos sem férias",
-              });
+            this.periodoAquisitivoEquipe.push({
+              nome: res.data[i].nome,
+              mensagem: "Colaborador prestes a acumular 2 anos sem férias",
+            });
           }
         })
         .catch((error) => {
@@ -171,6 +182,9 @@ export default {
           );
           this.emailColaboradorAprovado(item);
           this.$router.push({ name: "Perfil Gestor" });
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
           return res;
         })
         .catch((error) => {
@@ -193,7 +207,7 @@ export default {
               position: "bottom-right",
             }
           );
-          this.emailColaboradorReprovado(item)
+          this.emailColaboradorReprovado(item);
           this.$router.push({ name: "Perfil Gestor" });
           return res;
         })

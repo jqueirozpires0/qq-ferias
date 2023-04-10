@@ -267,7 +267,7 @@ export default {
         }
         this.isLoading = true;
         api
-          .put("colaborador/" + this.colaborador.col_id, colaborador)
+          .put("colaborador/" + this.$route.query.item, colaborador)
           .then((res) => {
             Vue.toasted.success("Colaborador editado!", {
               className: "success",
@@ -275,7 +275,7 @@ export default {
               position: "bottom-right",
             });
             this.$router.push("/administrador");
-            return res
+            return res;
           })
           .catch((error) => {
             this.isLoading = false;
@@ -308,15 +308,16 @@ export default {
     },
     async getColaborador() {
       api
-        .get("info-colaborador")
+        .get("colaboradorById/" + this.$route.query.item)
         .then((res) => {
+          console.log(res.data);
           this.colaborador = res.data;
           this.colaborador.col_inicio_contrato = moment(
             this.colaborador.col_inicio_contrato
           ).format("YYYY-MM-DD");
-          if (this.colaborador.COL_isGestor == true) {
+          if (this.colaborador.col_isGestor == true) {
             this.cargo = "Gestor";
-          } else if (this.colaborador.col_isAdministrador) {
+          } else if (this.colaborador.col_isAdministrador == true) {
             this.cargo = "Administrador";
           } else {
             this.cargo = "Colaborador";
@@ -336,7 +337,7 @@ export default {
   },
   watch: {
     "colaborador.col_contrato_tipo": function () {
-      if (this.colaborador.tipo_contratual == "PJ") {
+      if (this.colaborador.col_contrato_tipo == "PJ") {
         this.tipoContratoPJ = true;
         this.tipoContratoCLT = false;
       } else {

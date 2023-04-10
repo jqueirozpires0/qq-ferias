@@ -8,13 +8,16 @@
       </h1>
       <md-content class="info-perfil">
         <h2>Nome</h2>
-        <h3>{{this.nomeColaborador}}</h3>
+        <h3>{{ this.nomeColaborador }}</h3>
         <h2>Gestor responsável</h2>
-        <h3>{{this.nomeGestor}}</h3>
+        <h3>{{ this.nomeGestor }}</h3>
         <h2>Dias disponíveis para férias</h2>
         <h3>{{ this.diasFeriasColaborador }} Dias</h3>
       </md-content>
-      <md-table v-model="solicitacoes" id="table-historico">
+      <div class="colaboradores-vazio" v-if="this.solicitacoes.length <= 0">
+        <h1>Ainda não possui histórico de solicitações</h1>
+      </div>
+      <md-table v-else v-model="solicitacoes" id="table-historico">
         <md-table-toolbar>
           <h1 style="margin-inline: auto; padding-top: 50px">
             Histórico solicitações
@@ -55,7 +58,10 @@
           >
         </md-table-row>
       </md-table>
-      <md-table v-model="periodoAquisitivo">
+      <div class="colaboradores-vazio" v-if="this.periodoAquisitivo.length <= 0">
+        <h1>Ainda não possui avisos</h1>
+      </div>
+      <md-table v-else v-model="periodoAquisitivo">
         <md-table-toolbar>
           <h1 style="margin-inline: auto; padding-top: 50px">Avisos</h1>
         </md-table-toolbar>
@@ -111,7 +117,7 @@ export default {
     periodoAquisitivo: [],
     nomeColaborador: "",
     nomeGestor: "",
-    diasFeriasColaborador: ""
+    diasFeriasColaborador: "",
   }),
   methods: {
     async getPeriodoAquisitivo() {
@@ -133,8 +139,8 @@ export default {
       api
         .get("info-colaborador")
         .then((res) => {
-          this.nomeColaborador = res.data.col_nome
-          this.diasFeriasColaborador = res.data.col_dias_ferias
+          this.nomeColaborador = res.data.col_nome;
+          this.diasFeriasColaborador = res.data.col_dias_ferias;
         })
         .catch((error) => {
           console.log(error);
@@ -144,7 +150,7 @@ export default {
       api
         .get("info-gestor")
         .then((res) => {
-          this.nomeGestor = res.data.col_nome
+          this.nomeGestor = res.data.col_nome;
         })
         .catch((error) => {
           console.log(error);

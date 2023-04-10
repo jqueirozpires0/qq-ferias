@@ -247,8 +247,9 @@ export default {
         .get("colaboradores-e-suas-ferias")
         .then((res) => {
           this.isLoading = false;
+          console.log(res.data)
           for (var i = 0; i < res.data.length; i++) {
-            if (res.data[i].dias == 30) this.totalAvisos.push(res.data[i]);
+            this.totalAvisos.push(res.data[i]);
           }
         })
         .catch((error) => {
